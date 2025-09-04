@@ -14,7 +14,10 @@
  *    limitations under the License.
  */
 
-package com.app.portfolio.management.controllers;
+package com.app.portfolio.management.handlers;
 
-public class TransactionControllers {
+import org.springframework.stereotype.Component;
+
+@Component
+public class CategoryHandler {
 }

@@ -17,5 +17,7 @@
 package com.app.portfolio.management.services.impl;
 
 
-public class AccountServiceImpl {
+import com.app.portfolio.management.services.AccountService;
+
+public class AccountServiceImpl implements AccountService {
 }

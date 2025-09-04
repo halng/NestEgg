@@ -14,11 +14,17 @@
  *    limitations under the License.
  */
 
-package com.app.portfolio.management.controllers;
+package com.app.portfolio.management.handlers;
 
-import com.app.portfolio.management.entity.Budget;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 
-import java.util.UUID;
+@Component
+public class BudgetHandler {
 
-public class BudgetControllers {
+	public Mono<ServerResponse> createBudget(ServerRequest request) {
+		return Mono.empty();
+	}
 }

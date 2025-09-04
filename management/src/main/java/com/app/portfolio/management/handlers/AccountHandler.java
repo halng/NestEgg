@@ -14,7 +14,18 @@
  *    limitations under the License.
  */
 
-package com.app.portfolio.management.controllers;
+package com.app.portfolio.management.handlers;
 
-public class CategoryControllers {
+
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
+
+@Component
+public class AccountHandler {
+
+	public Mono<ServerResponse> createAccount(ServerRequest request) {
+		return Mono.empty();
+	}
 }

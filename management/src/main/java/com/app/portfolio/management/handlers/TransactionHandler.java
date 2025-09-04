@@ -14,11 +14,10 @@
  *    limitations under the License.
  */
 
-package com.app.portfolio.management.controllers;
+package com.app.portfolio.management.handlers;
 
-import com.app.portfolio.management.entity.Account;
+import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
-public class AccountControllers{
+@Component
+public class TransactionHandler {
 }

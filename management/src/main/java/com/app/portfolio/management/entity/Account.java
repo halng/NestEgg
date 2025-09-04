@@ -26,7 +26,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Account extends Audit{
+public class Account extends Audit {
 	@Id
 	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
 	private UUID id;
