@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  pull-requests: write
+  
 jobs:
   copyright-check:
     name: Copyright Header Check
