@@ -16,26 +16,34 @@
 
 package com.app.portfolio.management.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
-public class Account extends Audit {
-	@Id
-	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	private UUID id;
+@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Account extends AuditEntity {
 
-	@NonNull
+	@Column(unique = true, nullable = false)
 	private String name;
+
+	@Enumerated(EnumType.STRING)
 	private AccountType type;
+
 	private String branch;
+
+	@Column(nullable = false)
 	private Double initialBalance;
+
+	@Column(nullable = false)
 	private Double currentBalance;
+
+	@OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Transactions> transactions;
 
 }

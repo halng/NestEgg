@@ -16,23 +16,29 @@
 
 package com.app.portfolio.management.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
-public class Category extends Audit {
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private UUID id;
-
+@Builder
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+public class Category extends AuditEntity {
 	@NonNull
+	@Column(unique = true, nullable = false, length = 50)
 	private String name;
+
+	@Column(length = 100)
 	private String description;
+
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "category")
+	private Budget budget;
+
+	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Transactions> transactions;
+
 }

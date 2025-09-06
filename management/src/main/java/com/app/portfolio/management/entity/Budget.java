@@ -16,21 +16,30 @@
 
 package com.app.portfolio.management.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.util.UUID;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
-public class Budget extends Audit {
-	@Id
-	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	private UUID id;
+@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Budget extends AuditEntity {
+
+	@OneToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "category_id", nullable = false, unique = true)
 	private Category category;
+
+	@Column(nullable = false)
 	private Double amount;
+
+	@Column(nullable = false)
 	private Double spent;
+
+	@Column(nullable = false)
 	private Double remaining;
+
+	@Enumerated(EnumType.STRING)
+	private Period period;
 }

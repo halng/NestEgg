@@ -17,10 +17,10 @@
 package com.app.portfolio.management.entity;
 
 public enum TransactionType {
-	INCOME(0),
-	EXPENSE(1),
-	TRANSFER(2);
+	INCOME("IN"),
+	EXPENSE("OUT"),
+	TRANSFER("TRANS");
 
-	TransactionType(int i) {
+	TransactionType(String i) {
 	}
 }

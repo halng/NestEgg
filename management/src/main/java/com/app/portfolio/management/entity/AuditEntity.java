@@ -16,21 +16,34 @@
 
 package com.app.portfolio.management.entity;
 
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @MappedSuperclass
 @Getter
 @Setter
-public abstract class Audit {
-	@CreatedDate
+public abstract class AuditEntity {
+	@Id
+	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+	private UUID id;
+
+	@Version
+	private Long version;
+
+	@CreationTimestamp
+	@Column(updatable = false, nullable = false)
 	private Instant createdAt;
 
 	@UpdateTimestamp
 	private Instant updatedAt;
+
+	@Column(nullable = false)
+	private Boolean isActive = true;
 }

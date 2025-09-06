@@ -26,6 +26,13 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 public class AppRouters {
 
 	@Bean
+	public RouterFunction<ServerResponse> pingRoute() {
+		return RouterFunctions.route()
+				.GET("/ping", request -> ServerResponse.ok().bodyValue("pong"))
+				.build();
+	}
+
+	@Bean
 	public RouterFunction<ServerResponse> accountRoutes(AccountHandler controllers) {
 		return RouterFunctions.route()
 				.path(

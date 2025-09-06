@@ -1,0 +1,51 @@
+name: Copyright
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  copyright-check:
+    name: Copyright Header Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find files missing copyright
+        id: check
+        run: |
+          MISSING=$(grep -L -r -m 1 -E "Copyright [0-9]{4} Hao Nguyen Tan" --include="*.java" . || true)
+          if [ -n "$MISSING" ]; then
+            echo "missing=true" >> $GITHUB_OUTPUT
+            echo "files<<EOF" >> $GITHUB_OUTPUT
+            echo "$MISSING" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "missing=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR if missing headers
+        if: steps.check.outputs.missing == 'true'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ❌ The following Java files are missing copyright headers:
+
+            ```
+            ${{ steps.check.outputs.files }}
+            ```
+
+      - name: Approve if all good
+        if: steps.check.outputs.missing == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ✅ All Java files have copyright headers.

@@ -14,10 +14,11 @@
  *    limitations under the License.
  */
 
-package com.app.portfolio.management.exceptions;
+package com.app.portfolio.management.entity;
 
-public class SomethingException extends RuntimeException {
-	public SomethingException(String message) {
-		super(message);
-	}
+public enum Period {
+	DAILY,
+	WEEKLY,
+	MONTHLY,
+	YEARLY
 }
