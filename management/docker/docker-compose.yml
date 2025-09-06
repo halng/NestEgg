@@ -1,0 +1,22 @@
+version: "3.5"
+
+services:
+  postgres:
+    image: postgres:15.4
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio_management}
+    ports:
+      - "5432:5432"
+    networks:
+      - nestegg-network
+    restart: unless-stopped
+
+networks:
+  nestegg-network:
+    driver: bridge
+
+volumes:
+  postgres:
+    driver: local
