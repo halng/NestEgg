@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler({ResourceNotFoundException.class})
 	@Order(1)
 	public ApiRes handleResourceNotFoundException(ResourceNotFoundException ex) {
-		log.error("Illegal argument: {}", ex.getMessage(), ex);
+		log.error("Resource not found: {}", ex.getMessage(), ex);
 		return ApiRes.notFound(ex.getMessage());
 	}
 
