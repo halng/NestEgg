@@ -1,0 +1,31 @@
+server:
+  port: 9009
+  active:
+    version: v1
+  servlet:
+    context-path: /api/${server.active.version}/portfolio-management
+
+
+spring:
+  application:
+    name: portfolio-management
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/portfolio_management
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    generate-ddl: true
