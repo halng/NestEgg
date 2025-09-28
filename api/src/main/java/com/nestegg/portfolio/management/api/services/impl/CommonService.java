@@ -17,6 +17,8 @@
 package com.nestegg.portfolio.management.api.services.impl;
 
 import com.nestegg.portfolio.management.api.entities.Account;
+import com.nestegg.portfolio.management.api.entities.Category;
+import com.nestegg.portfolio.management.api.exceptions.ResourceNotFoundException;
 import com.nestegg.portfolio.management.api.repositories.AccountRepository;
 import com.nestegg.portfolio.management.api.repositories.CategoryRepository;
 import org.slf4j.Logger;
@@ -26,13 +28,13 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 @Service
-public class ServiceImpl {
-	private static final Logger logger = LoggerFactory.getLogger(ServiceImpl.class);
+public class CommonService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CommonService.class);
 
 	private final AccountRepository accountRepository;
 	private final CategoryRepository categoryRepository;
 
-	public ServiceImpl(AccountRepository accountRepository, CategoryRepository categoryRepository) {
+	public CommonService(AccountRepository accountRepository, CategoryRepository categoryRepository) {
 		this.accountRepository = accountRepository;
 		this.categoryRepository = categoryRepository;
 	}
@@ -41,14 +43,23 @@ public class ServiceImpl {
 		try {
 			return UUID.fromString(id);
 		} catch (IllegalArgumentException e) {
-			logger.error("Invalid UUID string: {}", id);
+			LOGGER.error("Invalid UUID string: {}", id);
 			return null;
 		}
 	}
 
-	protected Account getAccountById(String id) {
+	protected Account getAccount(String id) {
+		return this.accountRepository.findById(fromString(id)).orElseThrow(() -> {
+			LOGGER.debug("Account with id {} not found", id);
+			return new ResourceNotFoundException("Account with id %s not found".formatted(id));
+		});
+	}
 
-		return accountRepository.findById(id).orElse(null);
+	protected Category getCategory(String id) {
+		return this.categoryRepository.findById(fromString(id)).orElseThrow(() -> {
+			LOGGER.debug("Category with id {} not found", id);
+			return new ResourceNotFoundException("Category with id %s not found".formatted(id));
+		});
 	}
 
 }

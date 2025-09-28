@@ -29,6 +29,7 @@ import java.lang.annotation.*;
 public @interface EnumValid {
 
 	String message() default "must be a valid value of {enumClass}";
+
 	boolean nullable() default false;
 
 	Class<?>[] groups() default {};

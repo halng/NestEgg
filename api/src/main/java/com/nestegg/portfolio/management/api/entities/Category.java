@@ -29,7 +29,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Category extends AuditEntity {
-	@NonNull
 	@Column(unique = true, nullable = false, length = 50)
 	private String name;
 
