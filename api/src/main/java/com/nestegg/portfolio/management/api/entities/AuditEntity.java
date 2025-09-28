@@ -45,4 +45,7 @@ public abstract class AuditEntity {
 
 	@Column(nullable = false)
 	private Boolean isActive = true;
+
+	@Column(nullable = false)
+	private Boolean isDeleted = false;
 }

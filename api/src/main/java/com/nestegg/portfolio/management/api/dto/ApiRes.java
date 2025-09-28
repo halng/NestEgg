@@ -45,32 +45,40 @@ public class ApiRes extends ResponseEntity<Res> {
 		super(body, status);
 	}
 
-	public static ApiRes created(String message){
+	public static ApiRes created(String message) {
 		return new ApiRes(new Res(201, message, null, true, Instant.now()), HttpStatus.CREATED);
 	}
 
-	public static ApiRes conflict(String message){
+	public static ApiRes created(String message, Object data) {
+		return new ApiRes(new Res(201, message, data, true, Instant.now()), HttpStatus.CREATED);
+	}
+
+	public static ApiRes conflict(String message) {
 		return new ApiRes(new Res(409, message, null, false, Instant.now()), HttpStatus.CONFLICT);
 	}
 
-	public static ApiRes badRequest(String message){
+	public static ApiRes badRequest(String message) {
 		return new ApiRes(new Res(400, message, null, false, Instant.now()), HttpStatus.BAD_REQUEST);
 	}
 
-	public static ApiRes internalError(String message){
+	public static ApiRes internalError(String message) {
 		return new ApiRes(new Res(500, message, null, false, Instant.now()), HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	public static ApiRes notFound(String message){
+	public static ApiRes notFound(String message) {
 		return new ApiRes(new Res(404, message, null, false, Instant.now()), HttpStatus.NOT_FOUND);
 	}
 
-	public static ApiRes ok(String message){
+	public static ApiRes ok(String message) {
 		return new ApiRes(new Res(200, message, null, true, Instant.now()), HttpStatus.OK);
 	}
 
-	public static ApiRes ok(String message, Object data){
+	public static ApiRes ok(String message, Object data) {
 		return new ApiRes(new Res(200, message, data, true, Instant.now()), HttpStatus.OK);
+	}
+
+	public static ApiRes accepted(String message) {
+		return new ApiRes(new Res(202, message, null, true, Instant.now()), HttpStatus.ACCEPTED);
 	}
 
 }

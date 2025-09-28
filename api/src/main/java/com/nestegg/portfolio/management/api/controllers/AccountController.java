@@ -42,8 +42,18 @@ public class AccountController {
 		return this.accountService.updateAccount(request, accountId);
 	}
 
+	@PatchMapping("/{accountId}")
+	public ApiRes updateAccountStatus(@PathVariable String accountId) {
+		return this.accountService.updateAccount(accountId);
+	}
+
 	@GetMapping("/{accountId}")
 	public ApiRes getAccountById(@PathVariable String accountId) {
 		return this.accountService.getAccountById(accountId);
+	}
+
+	@DeleteMapping("/{accountId}")
+	public ApiRes deleteAccountById(@PathVariable String accountId) {
+		return this.accountService.deleteAccountById(accountId);
 	}
 }

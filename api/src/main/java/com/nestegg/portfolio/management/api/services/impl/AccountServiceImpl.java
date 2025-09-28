@@ -21,7 +21,6 @@ import com.nestegg.portfolio.management.api.dto.AccountView;
 import com.nestegg.portfolio.management.api.dto.ApiRes;
 import com.nestegg.portfolio.management.api.entities.Account;
 import com.nestegg.portfolio.management.api.entities.AccountType;
-import com.nestegg.portfolio.management.api.exceptions.ResourceNotFoundException;
 import com.nestegg.portfolio.management.api.repositories.AccountRepository;
 import com.nestegg.portfolio.management.api.services.AccountService;
 import com.nestegg.portfolio.management.api.utils.StringValidators;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -38,17 +37,11 @@ public class AccountServiceImpl implements AccountService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AccountServiceImpl.class);
 
 	private final AccountRepository accountRepository;
+	private final CommonService commonService;
 
-	public AccountServiceImpl(AccountRepository accountRepository) {
+	public AccountServiceImpl(AccountRepository accountRepository, CommonService commonService) {
 		this.accountRepository = accountRepository;
-	}
-
-	private Account getAccount(String id) {
-		UUID uuid = StringValidators.parseUUID(id);
-		return this.accountRepository.findById(uuid).orElseThrow(() -> {
-			LOGGER.warn("Account with id {} not found", id);
-			return new ResourceNotFoundException("Account with id %s not found".formatted(id));
-		});
+		this.commonService = commonService;
 	}
 
 	@Override
@@ -75,12 +68,24 @@ public class AccountServiceImpl implements AccountService {
 
 		var createdAccount = this.accountRepository.save(newAccount);
 		LOGGER.info("Created new account name {} id {}", createdAccount.getName(), createdAccount.getId());
-		return ApiRes.created("Account created successfully");
+		return ApiRes.created(
+				"Account created successfully", Map.of(
+						"id", createdAccount.getId().toString()
+				)
+		);
 	}
 
 	@Override
 	public ApiRes updateAccount(AccountCreate req, String id) {
-		Account account = this.getAccount(id);
+		Account account = commonService.getAccount(id);
+
+		if (account.getIsDeleted() || !account.getIsActive()) {
+			return ApiRes.badRequest("Cannot update a deleted account or an inactive account");
+		}
+
+		if (accountRepository.existsByName(req.name())) {
+			return ApiRes.conflict("Account with the same name already exists");
+		}
 
 		account.setType(AccountType.valueOf(req.type()));
 		account.setBranch(req.branch());
@@ -92,14 +97,39 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	public ApiRes updateAccount(String id) {
+		LOGGER.info("Toggling account status with id: {}", id);
+		Account account = commonService.getAccount(id);
+		if (account.getIsDeleted()) {
+			return ApiRes.badRequest("Cannot update a deleted account");
+		}
+
+		account.setIsActive(!account.getIsActive());
+		this.accountRepository.save(account);
+
+		LOGGER.info("Toggled account status with id: {}. New status isActive={}", id, account.getIsActive());
+		return ApiRes.ok("Account status updated successfully");
+	}
+
+	@Override
 	public ApiRes getAccountById(String id) {
-		Account account = this.getAccount(id);
+		Account account = commonService.getAccount(id);
 
 		AccountView view = new AccountView(
 				account.getId().toString(), account.getName(), account.getType().name(),
-				account.getBranch(), account.getCurrentBalance()
+				account.getBranch(), account.getCurrentBalance(), account.getIsActive(), account.getIsDeleted()
 		);
 
 		return ApiRes.ok("Account existed", view);
+	}
+
+	@Override
+	public ApiRes deleteAccountById(String id) {
+		LOGGER.info("Deleting account with id: {}", id);
+		Account account = commonService.getAccount(id);
+		account.setIsDeleted(true);
+		this.accountRepository.save(account);
+		LOGGER.info("Deleted account with id: {}", id);
+		return ApiRes.accepted("Account deleted successfully");
 	}
 }

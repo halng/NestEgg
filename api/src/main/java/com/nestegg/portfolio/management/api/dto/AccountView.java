@@ -21,5 +21,6 @@ import lombok.Builder;
 import java.math.BigInteger;
 
 @Builder
-public record AccountView(String id, String name, String type, String branch, BigInteger balance) {
+public record AccountView(String id, String name, String type, String branch, BigInteger balance, boolean isActive,
+						  boolean isDeleted) {
 }

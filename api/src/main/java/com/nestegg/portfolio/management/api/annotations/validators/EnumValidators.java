@@ -19,6 +19,7 @@ package com.nestegg.portfolio.management.api.annotations.validators;
 import com.nestegg.portfolio.management.api.annotations.EnumValid;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+
 import java.util.Arrays;
 
 public class EnumValidators implements ConstraintValidator<EnumValid, String> {

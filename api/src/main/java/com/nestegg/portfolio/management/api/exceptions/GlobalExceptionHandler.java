@@ -52,7 +52,6 @@ public class GlobalExceptionHandler {
 	}
 
 
-
 	@Order(1000)
 	@ExceptionHandler(Exception.class)
 	public ApiRes handleGenericException(Exception ex) {

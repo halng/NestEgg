@@ -14,31 +14,7 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.entities;
+package com.nestegg.portfolio.management.api.dto;
 
-
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.List;
-
-@Getter
-@Setter
-@Builder
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
-public class Category extends AuditEntity {
-	@Column(unique = true, nullable = false, length = 50)
-	private String name;
-
-	@Column(length = 100)
-	private String description;
-
-	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "category")
-	private Budget budget;
-
-	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<Transaction> transactions;
-
+public record CategoryView(String id, String name, String description, boolean isActive, boolean isDeleted) {
 }

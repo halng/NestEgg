@@ -14,31 +14,15 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.entities;
+package com.nestegg.portfolio.management.api.repositories;
 
+import com.nestegg.portfolio.management.api.entities.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.*;
-import lombok.*;
+import java.util.UUID;
 
-import java.util.List;
-
-@Getter
-@Setter
-@Builder
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
-public class Category extends AuditEntity {
-	@Column(unique = true, nullable = false, length = 50)
-	private String name;
-
-	@Column(length = 100)
-	private String description;
-
-	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "category")
-	private Budget budget;
-
-	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<Transaction> transactions;
-
+@Repository
+public interface CategoryRepository extends JpaRepository<Category, UUID> {
+	boolean existsByName(String name);
 }
