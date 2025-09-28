@@ -44,7 +44,7 @@ public class CommonService {
 			return UUID.fromString(id);
 		} catch (IllegalArgumentException e) {
 			LOGGER.error("Invalid UUID string: {}", id);
-			return null;
+			throw new ResourceNotFoundException("Invalid UUID string: %s".formatted(id));
 		}
 	}
 
