@@ -78,7 +78,7 @@ public class ApiRes extends ResponseEntity<Res> {
 	}
 
 	public static ApiRes accepted(String message) {
-		return new ApiRes(new Res(204, message, null, true, Instant.now()), HttpStatus.NO_CONTENT);
+		return new ApiRes(new Res(202, message, null, true, Instant.now()), HttpStatus.ACCEPTED);
 	}
 
 }
