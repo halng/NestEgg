@@ -41,9 +41,9 @@ public class CategoryServiceImpl implements CategoryService {
 	}
 
 	private boolean isInvalid(CategoryCreate req) {
-		return !StringValidators.isNullOrEmpty(req.name())
-				&& !StringValidators.isNullOrEmpty(req.description())
-				&& this.categoryRepository.existsByName(req.name());
+		return StringValidators.isNullOrEmpty(req.name())
+				|| StringValidators.isNullOrEmpty(req.description())
+				|| this.categoryRepository.existsByName(req.name());
 	}
 
 	@Override
