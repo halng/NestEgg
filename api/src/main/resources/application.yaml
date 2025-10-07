@@ -5,10 +5,17 @@ server:
   servlet:
     context-path: /api/${server.active.version}/portfolio-management
 
+logging:
+  level:
+    com.nestegg.portfolio.management.api: debug
 
 spring:
   application:
     name: portfolio-management
+  task:
+    scheduling:
+      pool:
+        size: 5
 
   datasource:
     url: jdbc:postgresql://localhost:5432/portfolio_management
