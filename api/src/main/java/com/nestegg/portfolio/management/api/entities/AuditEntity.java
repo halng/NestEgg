@@ -48,4 +48,29 @@ public abstract class AuditEntity {
 
 	@Column(nullable = false)
 	private Boolean isDeleted = false;
+
+
+	public String toString(boolean isMashed) {
+		StringBuilder sb = new StringBuilder(this.getClass().getSimpleName() + "{");
+		for (var field : this.getClass().getDeclaredFields()) {
+			field.setAccessible(true);
+			try {
+				String value = field.get(this) != null ? field.get(this).toString() : "null";
+				if (isMashed) {
+					int numCharsToMashed = value.length() / 2;
+					String mashed = "*".repeat(numCharsToMashed);
+					value = value.substring(0, numCharsToMashed) + mashed;
+				}
+				sb.append(field.getName()).append("=").append(value).append(", ");
+			} catch (IllegalAccessException e) {
+				sb.append(field.getName()).append("=ACCESS_ERROR, ");
+			}
+		}
+		// Remove the trailing comma and space, then close the bracket
+		if (sb.length() > 2) {
+			sb.setLength(sb.length() - 2);
+		}
+		sb.append("}");
+		return sb.toString();
+	}
 }
