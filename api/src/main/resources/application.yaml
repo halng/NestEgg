@@ -5,10 +5,17 @@ server:
   servlet:
     context-path: /api/${server.active.version}/portfolio-management
 
+logging:
+  level:
+    com.nestegg.portfolio.management.api: debug
 
 spring:
   application:
     name: portfolio-management
+  task:
+    scheduling:
+      pool:
+        size: 5
 
   datasource:
     url: jdbc:postgresql://localhost:5432/portfolio_management
@@ -23,9 +30,17 @@ spring:
       max-lifetime: 1800000
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     generate-ddl: true
+
+integration:
+  tcbs:
+    tickers: VRE,VPB,VNM,VIC,VIB,VHM,TLG,TCB,SAB,REE,QNS,PVS,PNJ,NLG,MSN,MCH,IDC,HCM,DGW,GMD,CTR,CTG,CTD,BWE,BVH,BID,ACV,ACB,MWG,HPG,STB,FPT,MBB
+    base-url: https://apiextaws.tcbs.com.vn/tcanalysis/v1/ticker
+    token: ${token}
+    stock-ratio: /%s/stockratio
+    overview: /%s/overview
