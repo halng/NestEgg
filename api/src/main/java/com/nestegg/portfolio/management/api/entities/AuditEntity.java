@@ -29,10 +29,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public abstract class AuditEntity {
-	@Id
-	@GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-	private UUID id;
-
 	@Version
 	private Long version;
 

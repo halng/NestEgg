@@ -18,6 +18,7 @@ package com.nestegg.portfolio.management.api.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.*;
 
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Map;
 @Builder
 @Entity(name = "tickers")
 public class Ticker extends AuditEntity {
-	@Column(nullable = false, unique = true)
+	@Id
 	private String symbol;
 	private String name;
 	private Double rating;
@@ -45,16 +46,29 @@ public class Ticker extends AuditEntity {
 			throw new IllegalArgumentException("Object is not a map");
 		}
 
-		return Ticker.builder()
+		TickerBuilder ticker = Ticker.builder()
 				.symbol(map.get("ticker").toString())
 				.name(map.get("shortName").toString())
 				.exchange(map.get("exchange").toString())
-				.rating(Double.parseDouble(map.get("stockRating").toString()))
-				.deltaInWeek(Double.parseDouble(map.get("deltaInWeek").toString()))
-				.deltaInMonth(Double.parseDouble(map.get("deltaInMonth").toString()))
-				.deltaInYear(Double.parseDouble(((map.get("deltaInYear").toString()))))
-				.isActivelyTraded(true)
-				.industry(map.get("industryEn").toString())
-				.build();
+				.isActivelyTraded(true);
+
+		if (map.get("stockRating") != null) {
+			ticker.rating(Double.parseDouble(map.get("stockRating").toString()));
+		}
+		if (map.get("deltaInWeek") != null) {
+			ticker.deltaInWeek(Double.parseDouble(map.get("deltaInWeek").toString()));
+		}
+		if (map.get("deltaInMonth") != null) {
+			ticker.deltaInMonth(Double.parseDouble(map.get("deltaInMonth").toString()));
+		}
+		if (map.get("deltaInYear") != null) {
+			ticker.deltaInYear(Double.parseDouble(map.get("deltaInYear").toString()));
+		}
+
+		if (map.get("industryEn") != null) {
+			ticker.industry(map.get("industryEn").toString());
+		}
+
+		return ticker.build();
 	}
 }

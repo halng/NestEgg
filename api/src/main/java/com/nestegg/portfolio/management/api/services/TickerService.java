@@ -20,4 +20,6 @@ import com.nestegg.portfolio.management.api.entities.Ticker;
 
 public interface TickerService {
 	void saveOrUpdateTicker(Ticker ticker);
+
+	void saveIfNotExists(String symbol);
 }

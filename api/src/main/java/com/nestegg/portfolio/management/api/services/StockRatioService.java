@@ -20,4 +20,6 @@ import com.nestegg.portfolio.management.api.entities.StockRatio;
 
 public interface StockRatioService {
 	void updateOrCreateStockRatios(StockRatio stockRatio);
+
+	void saveIfNotExists(String symbol);
 }

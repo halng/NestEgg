@@ -19,6 +19,7 @@ package com.nestegg.portfolio.management.api.services.impl;
 import com.nestegg.portfolio.management.api.entities.Ticker;
 import com.nestegg.portfolio.management.api.repositories.TickerRepository;
 import com.nestegg.portfolio.management.api.services.TickerService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class TickerServiceImpl implements TickerService {
 	}
 
 	@Override
+	@Transactional
 	public void saveOrUpdateTicker(Ticker ticker) {
 		if (this.tickerRepository.existsBySymbol(ticker.getSymbol())) {
 			LOGGER.info("Ticker with symbol {} exists. Updating with data {}", ticker.getSymbol(), ticker.toString(true));
@@ -51,5 +53,19 @@ public class TickerServiceImpl implements TickerService {
 			LOGGER.info("Ticker with symbol {} created.", ticker.getSymbol());
 		}
 
+	}
+
+	@Override
+	@Transactional
+	public void saveIfNotExists(String symbol) {
+		if (!this.tickerRepository.existsBySymbol(symbol)) {
+			LOGGER.info("Ticker with symbol {} does not exist. Creating a new record.", symbol);
+			Ticker newTicker = new Ticker();
+			newTicker.setSymbol(symbol);
+			this.tickerRepository.save(newTicker);
+			LOGGER.info("Ticker with symbol {} created without data.", symbol);
+		} else {
+			LOGGER.info("Ticker with symbol {} already exists. No action taken.", symbol);
+		}
 	}
 }

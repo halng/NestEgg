@@ -29,6 +29,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Category extends AuditEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String id;
+
 	@Column(unique = true, nullable = false, length = 50)
 	private String name;
 
