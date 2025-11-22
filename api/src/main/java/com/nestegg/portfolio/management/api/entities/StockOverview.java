@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import lombok.*;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Setter
 @Getter
@@ -70,14 +71,14 @@ public class StockOverview extends AuditEntity {
 		return value != null ? value.toString() : null;
 	}
 
-	private void setDoubleIfPresent(java.util.function.Consumer<Double> setter, Map<?, ?> map, String key) {
+	private void setDoubleIfPresent(Consumer<Double> setter, Map<?, ?> map, String key) {
 		Object value = map.get(key);
 		if (value != null) {
 			setter.accept(Double.parseDouble(value.toString()));
 		}
 	}
 
-	private void setStringIfPresent(java.util.function.Consumer<String> setter, Map<?, ?> map, String key) {
+	private void setStringIfPresent(Consumer<String> setter, Map<?, ?> map, String key) {
 		Object value = map.get(key);
 		if (value != null) {
 			setter.accept(value.toString());
