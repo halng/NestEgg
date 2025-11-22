@@ -29,8 +29,8 @@ import lombok.*;
 public class Transaction extends AuditEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "account_id", referencedColumnName = "id", nullable = false)
