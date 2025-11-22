@@ -14,17 +14,12 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.repositories;
+package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.entities.Ticker;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import com.nestegg.portfolio.management.api.entities.StockBalanceSheet;
 
-import java.util.Optional;
-import java.util.UUID;
+public interface StockBalanceSheetService {
+	void updateOrCreate(StockBalanceSheet stockBalanceSheet);
 
-@Repository
-public interface TickerRepository extends CrudRepository<Ticker, UUID> {
-	boolean existsBySymbol(String symbol);
-	Optional<Ticker> findBySymbol(String symbol);
+	void saveIfNotExists(String symbol);
 }

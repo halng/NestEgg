@@ -14,12 +14,17 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.repositories;
 
 import com.nestegg.portfolio.management.api.entities.StockOverview;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
+import java.util.Optional;
+import java.util.UUID;
 
-	void saveIfNotExists(String symbol);
+@Repository
+public interface StockOverviewRepository extends CrudRepository<StockOverview, UUID> {
+	boolean existsBySymbol(String symbol);
+	Optional<StockOverview> findBySymbol(String symbol);
 }

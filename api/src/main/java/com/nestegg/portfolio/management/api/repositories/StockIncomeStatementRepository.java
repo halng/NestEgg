@@ -14,12 +14,13 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.repositories;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
+import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
-
-	void saveIfNotExists(String symbol);
+@Repository
+public interface StockIncomeStatementRepository extends JpaRepository<StockIncomeStatement, Long> {
+	boolean existsByTicker(String ticker);
 }

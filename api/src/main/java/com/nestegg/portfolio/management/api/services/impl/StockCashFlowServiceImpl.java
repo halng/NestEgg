@@ -14,12 +14,11 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
+import com.nestegg.portfolio.management.api.services.StockCashFlowService;
+import org.springframework.stereotype.Service;
 
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
-
-	void saveIfNotExists(String symbol);
+@Service
+public class StockCashFlowServiceImpl implements StockCashFlowService {
 }

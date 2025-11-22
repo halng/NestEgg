@@ -28,8 +28,14 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "integration.tcbs")
 public class TickerConfiguration {
 	private String tickers;
+	private boolean crawlOnStartup;
+	private String bcfTickers;
 	private String baseUrl;
 	private String token;
 	private String stockRatio;
 	private String overview;
+	private String incomeStatement;
+	private String balanceSheet;
+	private String cashFlow;
+	private String financialRatio;
 }

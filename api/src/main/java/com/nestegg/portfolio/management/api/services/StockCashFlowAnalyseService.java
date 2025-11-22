@@ -16,10 +16,10 @@
 
 package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
+import com.nestegg.portfolio.management.api.entities.StockCashFlowAnalyse;
 
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
+public interface StockCashFlowAnalyseService {
+	void updateOrCreate(StockCashFlowAnalyse stockCashFlow);
 
 	void saveIfNotExists(String symbol);
 }

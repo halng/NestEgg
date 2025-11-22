@@ -14,12 +14,29 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.entities;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
+import jakarta.persistence.*;
+import lombok.*;
 
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "stock_cash_flows")
+@Entity
+public class StockCashFlow extends AuditEntity {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-	void saveIfNotExists(String symbol);
+	private String ticker;
+	private Integer quarter;
+	private Integer year;
+	private Double investCost;
+	private Double fromInvest;
+	private Double fromFinancial;
+	private Double fromSale;
+	private Double freeCashFlow;
 }

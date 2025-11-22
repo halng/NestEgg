@@ -28,8 +28,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity(name = "tickers")
-public class Ticker extends AuditEntity {
+@Entity(name = "stock_overviews")
+public class StockOverview extends AuditEntity {
 	@Id
 	private String symbol;
 	private String name;
@@ -40,13 +40,15 @@ public class Ticker extends AuditEntity {
 	private Double deltaInYear;
 	private Boolean isActivelyTraded;
 	private String industry;
+	private Double outstandingShare;
+	private Double issueShare;
 
-	public Ticker fromObject(Object o) {
+	public StockOverview fromObject(Object o) {
 		if (!(o instanceof Map map)) {
 			throw new IllegalArgumentException("Object is not a map");
 		}
 
-		TickerBuilder ticker = Ticker.builder()
+		StockOverviewBuilder ticker = StockOverview.builder()
 				.symbol(map.get("ticker").toString())
 				.name(map.get("shortName").toString())
 				.exchange(map.get("exchange").toString())
@@ -67,6 +69,14 @@ public class Ticker extends AuditEntity {
 
 		if (map.get("industryEn") != null) {
 			ticker.industry(map.get("industryEn").toString());
+		}
+
+		if (map.get("outstandingShare") != null) {
+			ticker.outstandingShare(Double.parseDouble(map.get("outstandingShare").toString()));
+		}
+
+		if (map.get("issueShare") != null) {
+			ticker.issueShare(Double.parseDouble(map.get("issueShare").toString()));
 		}
 
 		return ticker.build();
