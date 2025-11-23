@@ -22,5 +22,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StockIncomeStatementRepository extends JpaRepository<StockIncomeStatement, Long> {
-	boolean existsByTicker(String ticker);
+	boolean existsByUniqueHash(String uniqueHash);
+
+	boolean existsByTicker(String symbol);
 }

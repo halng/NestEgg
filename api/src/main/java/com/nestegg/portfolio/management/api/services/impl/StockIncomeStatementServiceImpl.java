@@ -23,6 +23,8 @@ import com.nestegg.portfolio.management.api.services.StockIncomeStatementService
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
+
 @Slf4j
 @Service
 public class StockIncomeStatementServiceImpl implements StockIncomeStatementService {
@@ -35,7 +37,8 @@ public class StockIncomeStatementServiceImpl implements StockIncomeStatementServ
 	@Override
 	public void updateOrCreate(StockIncomeStatement stockRatio) {
 		log.info("Updating or creating income statement for stock: {}", stockRatio.getTicker());
-		if (stockIncomeStatementRepository.existsByTicker(stockRatio.getTicker())) {
+		String uniqueHash = Base64.getEncoder().encodeToString(String.format(StockIncomeStatement.getHashPattern(), stockRatio.getTicker(), stockRatio.getYear(), stockRatio.getQuarter()).getBytes());
+		if (stockIncomeStatementRepository.existsByUniqueHash(uniqueHash)) {
 			throw new NotImplementedException();
 		} else {
 			stockIncomeStatementRepository.save(stockRatio);
@@ -47,7 +50,7 @@ public class StockIncomeStatementServiceImpl implements StockIncomeStatementServ
 	@Override
 	public void saveIfNotExists(String symbol) {
 		log.info("Checking if income statement exists for ticker: {}", symbol);
-		if(!stockIncomeStatementRepository.existsByTicker(symbol)) {
+		if (!stockIncomeStatementRepository.existsByTicker(symbol)) {
 			StockIncomeStatement newIncomeStatement = new StockIncomeStatement();
 			newIncomeStatement.setTicker(symbol);
 			stockIncomeStatementRepository.save(newIncomeStatement);

@@ -22,5 +22,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StockBalanceSheetRepository extends JpaRepository<StockBalanceSheet, Long> {
+	boolean existsByUniqueHash(String uniqueHash);
 	boolean existsByTicker(String ticker);
 }

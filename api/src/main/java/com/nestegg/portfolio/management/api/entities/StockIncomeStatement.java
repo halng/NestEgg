@@ -19,6 +19,8 @@ package com.nestegg.portfolio.management.api.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Base64;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,14 +28,23 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "stock_income_statements")
-public class StockIncomeStatement extends AuditEntity{
+public class StockIncomeStatement extends AuditEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@Column(nullable = false, unique = true)
+	private String uniqueHash;
+
+	@Column(nullable = false)
 	private String ticker;
+
+	@Column(nullable = false)
 	private Integer quarter;
+
+	@Column(nullable = false)
 	private Integer year;
+
 	private Double revenue;
 	private Double yearRevenueGrowth;
 	private Double quarterRevenueGrowth;
@@ -55,4 +66,15 @@ public class StockIncomeStatement extends AuditEntity{
 	private Double provisionExpense;
 	private Double operationIncome;
 	private Double ebitda;
+
+	@PrePersist
+	private void generateUniqueHash() {
+		if (this.id == null && this.ticker != null && this.quarter != null && this.year != null) {
+			this.uniqueHash = Base64.getEncoder().encodeToString(String.format(getHashPattern(), this.ticker, this.year, this.quarter).getBytes());
+		}
+	}
+
+	public static String getHashPattern() {
+		return "%s_%dQ%d";
+	}
 }

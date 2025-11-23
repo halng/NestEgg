@@ -19,6 +19,8 @@ package com.nestegg.portfolio.management.api.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Base64;
+
 @Getter
 @Setter
 @Builder
@@ -30,9 +32,16 @@ public class StockFinancialRatio extends AuditEntity{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(nullable = false, unique = true)
+	private String uniqueHash;
+
+	@Column(nullable = false)
 	private String ticker;
+	@Column(nullable = false)
 	private Integer quarter;
+	@Column(nullable = false)
 	private Integer year;
+
 	private Double priceToEarning;
 	private Double priceToBook;
 	private Double valueBeforeEbitda;
@@ -89,4 +98,11 @@ public class StockFinancialRatio extends AuditEntity{
 	private Double ebitdaOnStockChange;
 	private Double bookValuePerShareChange;
 	private Double creditGrowth;
+
+	@PrePersist
+	private void generateId() {
+		if (this.id == null && this.ticker != null && this.quarter != null && this.year != null) {
+			this.uniqueHash = Base64.getEncoder().encodeToString((this.ticker + "_" + this.year + "Q" + this.quarter).getBytes());
+		}
+	}
 }
