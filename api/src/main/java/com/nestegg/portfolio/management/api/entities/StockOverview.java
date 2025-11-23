@@ -22,6 +22,7 @@ import jakarta.persistence.Id;
 import lombok.*;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Setter
 @Getter
@@ -48,37 +49,39 @@ public class StockOverview extends AuditEntity {
 			throw new IllegalArgumentException("Object is not a map");
 		}
 
-		StockOverviewBuilder ticker = StockOverview.builder()
-				.symbol(map.get("ticker").toString())
-				.name(map.get("shortName").toString())
-				.exchange(map.get("exchange").toString())
+		StockOverviewBuilder builder = StockOverview.builder()
+				.symbol(getStringValue(map, "ticker"))
+				.name(getStringValue(map, "shortName"))
+				.exchange(getStringValue(map, "exchange"))
 				.isActivelyTraded(true);
 
-		if (map.get("stockRating") != null) {
-			ticker.rating(Double.parseDouble(map.get("stockRating").toString()));
-		}
-		if (map.get("deltaInWeek") != null) {
-			ticker.deltaInWeek(Double.parseDouble(map.get("deltaInWeek").toString()));
-		}
-		if (map.get("deltaInMonth") != null) {
-			ticker.deltaInMonth(Double.parseDouble(map.get("deltaInMonth").toString()));
-		}
-		if (map.get("deltaInYear") != null) {
-			ticker.deltaInYear(Double.parseDouble(map.get("deltaInYear").toString()));
-		}
+		setDoubleIfPresent(builder::rating, map, "stockRating");
+		setDoubleIfPresent(builder::deltaInWeek, map, "deltaInWeek");
+		setDoubleIfPresent(builder::deltaInMonth, map, "deltaInMonth");
+		setDoubleIfPresent(builder::deltaInYear, map, "deltaInYear");
+		setStringIfPresent(builder::industry, map, "industryEn");
+		setDoubleIfPresent(builder::outstandingShare, map, "outstandingShare");
+		setDoubleIfPresent(builder::issueShare, map, "issueShare");
 
-		if (map.get("industryEn") != null) {
-			ticker.industry(map.get("industryEn").toString());
-		}
+		return builder.build();
+	}
 
-		if (map.get("outstandingShare") != null) {
-			ticker.outstandingShare(Double.parseDouble(map.get("outstandingShare").toString()));
-		}
+	private String getStringValue(Map<?, ?> map, String key) {
+		Object value = map.get(key);
+		return value != null ? value.toString() : null;
+	}
 
-		if (map.get("issueShare") != null) {
-			ticker.issueShare(Double.parseDouble(map.get("issueShare").toString()));
+	private void setDoubleIfPresent(Consumer<Double> setter, Map<?, ?> map, String key) {
+		Object value = map.get(key);
+		if (value != null) {
+			setter.accept(Double.parseDouble(value.toString()));
 		}
+	}
 
-		return ticker.build();
+	private void setStringIfPresent(Consumer<String> setter, Map<?, ?> map, String key) {
+		Object value = map.get(key);
+		if (value != null) {
+			setter.accept(value.toString());
+		}
 	}
 }
