@@ -16,10 +16,5 @@
 
 package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
-
-public interface TickerService {
-	void saveOrUpdateTicker(StockOverview ticker);
-
-	void saveIfNotExists(String symbol);
+public interface StockFinancialRatioService {
 }

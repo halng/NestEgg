@@ -16,9 +16,10 @@
 
 package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.entities.Ticker;
-import com.nestegg.portfolio.management.api.repositories.TickerRepository;
+import com.nestegg.portfolio.management.api.entities.StockOverview;
+import com.nestegg.portfolio.management.api.repositories.StockOverviewRepository;
 import com.nestegg.portfolio.management.api.services.TickerService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,30 +27,45 @@ import org.springframework.stereotype.Service;
 @Service
 public class TickerServiceImpl implements TickerService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TickerServiceImpl.class);
-	private final TickerRepository tickerRepository;
+	private final StockOverviewRepository stockOverviewRepository;
 
-	public TickerServiceImpl(TickerRepository tickerRepository) {
-		this.tickerRepository = tickerRepository;
+	public TickerServiceImpl(StockOverviewRepository tickerRepository) {
+		this.stockOverviewRepository = tickerRepository;
 	}
 
 	@Override
-	public void saveOrUpdateTicker(Ticker ticker) {
-		if (this.tickerRepository.existsBySymbol(ticker.getSymbol())) {
+	@Transactional
+	public void saveOrUpdateTicker(StockOverview ticker) {
+		if (this.stockOverviewRepository.existsBySymbol(ticker.getSymbol())) {
 			LOGGER.info("Ticker with symbol {} exists. Updating with data {}", ticker.getSymbol(), ticker.toString(true));
-			Ticker existingTicker = this.tickerRepository.findBySymbol(ticker.getSymbol()).orElseThrow();
+			StockOverview existingTicker = this.stockOverviewRepository.findBySymbol(ticker.getSymbol()).orElseThrow();
 			existingTicker.setName(ticker.getName());
 			existingTicker.setExchange(ticker.getExchange());
 			existingTicker.setRating(ticker.getRating());
 			existingTicker.setDeltaInWeek(ticker.getDeltaInWeek());
 			existingTicker.setDeltaInMonth(ticker.getDeltaInMonth());
 			existingTicker.setDeltaInYear(ticker.getDeltaInYear());
-			this.tickerRepository.save(existingTicker);
+			this.stockOverviewRepository.save(existingTicker);
 			LOGGER.info("Ticker with symbol {} updated.", ticker.getSymbol());
 		} else {
 			LOGGER.info("Ticker with symbol {} does not exist. Creating a new record with data {}", ticker.getSymbol(), ticker.toString(true));
-			this.tickerRepository.save(ticker);
+			this.stockOverviewRepository.save(ticker);
 			LOGGER.info("Ticker with symbol {} created.", ticker.getSymbol());
 		}
 
+	}
+
+	@Override
+	@Transactional
+	public void saveIfNotExists(String symbol) {
+		if (!this.stockOverviewRepository.existsBySymbol(symbol)) {
+			LOGGER.info("Ticker with symbol {} does not exist. Creating a new record.", symbol);
+			StockOverview newTicker = new StockOverview();
+			newTicker.setSymbol(symbol);
+			this.stockOverviewRepository.save(newTicker);
+			LOGGER.info("Ticker with symbol {} created without data.", symbol);
+		} else {
+			LOGGER.info("Ticker with symbol {} already exists. No action taken.", symbol);
+		}
 	}
 }

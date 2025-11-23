@@ -16,34 +16,27 @@
 
 package com.nestegg.portfolio.management.api.entities;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
-@Getter
 @Setter
+@Getter
 @Builder
-@Entity
-@AllArgsConstructor
 @NoArgsConstructor
-public class Category extends AuditEntity {
-
+@AllArgsConstructor
+@Table(name = "stock_cash_flows")
+@Entity
+public class StockCashFlow extends AuditEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-	@Column(unique = true, nullable = false, length = 50)
-	private String name;
-
-	@Column(length = 100)
-	private String description;
-
-	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "category")
-	private Budget budget;
-
-	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<Transaction> transactions;
-
+	private String ticker;
+	private Integer quarter;
+	private Integer year;
+	private Double investCost;
+	private Double fromInvest;
+	private Double fromFinancial;
+	private Double fromSale;
+	private Double freeCashFlow;
 }

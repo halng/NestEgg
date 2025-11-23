@@ -19,6 +19,7 @@ package com.nestegg.portfolio.management.api.services.impl;
 import com.nestegg.portfolio.management.api.entities.StockRatio;
 import com.nestegg.portfolio.management.api.repositories.StockRatioRepository;
 import com.nestegg.portfolio.management.api.services.StockRatioService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class StockRatioServiceImpl implements StockRatioService {
 	}
 
 	@Override
+	@Transactional
 	public void updateOrCreateStockRatios(StockRatio stockRatio) {
 
 		if (this.stockRatioRepository.existsByTicker(stockRatio.getTicker())) {
@@ -75,6 +77,20 @@ public class StockRatioServiceImpl implements StockRatioService {
 			LOGGER.info("Stock ratio for ticker {} does not exist. Creating a new record with data {}.", stockRatio.getTicker(), stockRatio.toString(true));
 			this.stockRatioRepository.save(stockRatio);
 			LOGGER.info("Stock ratio for ticker {} has been created.", stockRatio.getTicker());
+		}
+	}
+
+	@Override
+	@Transactional
+	public void saveIfNotExists(String symbol) {
+		if (!this.stockRatioRepository.existsByTicker(symbol)) {
+			LOGGER.info("Stock ratio for ticker {} does not exist. Creating a new record.", symbol);
+			StockRatio newStockRatio = new StockRatio();
+			newStockRatio.setTicker(symbol);
+			this.stockRatioRepository.save(newStockRatio);
+			LOGGER.info("Stock ratio for ticker {} has been created without data.", symbol);
+		} else {
+			LOGGER.info("Stock ratio for ticker {} already exists. No action taken.", symbol);
 		}
 	}
 }

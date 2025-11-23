@@ -27,6 +27,10 @@ import lombok.*;
 @NoArgsConstructor
 public class Budget extends AuditEntity {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String id;
+
 	@OneToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "category_id", nullable = false, unique = true)
 	private Category category;

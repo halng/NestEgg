@@ -31,6 +31,10 @@ import java.util.List;
 @NoArgsConstructor
 public class Account extends AuditEntity {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String id;
+
 	@Column(unique = true, nullable = false)
 	private String name;
 
