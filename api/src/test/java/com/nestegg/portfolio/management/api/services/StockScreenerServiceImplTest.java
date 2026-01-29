@@ -22,6 +22,7 @@ import com.nestegg.portfolio.management.api.entities.StockFinancialRatio;
 import com.nestegg.portfolio.management.api.entities.StockOverview;
 import com.nestegg.portfolio.management.api.repositories.StockFinancialRatioRepository;
 import com.nestegg.portfolio.management.api.repositories.StockOverviewRepository;
+import com.nestegg.portfolio.management.api.repositories.StockRatioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,13 +45,20 @@ class StockScreenerServiceImplTest {
 	private StockOverviewRepository stockOverviewRepository;
 
 	@Mock
+	private StockRatioRepository stockRatioRepository;
+
+	@Mock
 	private StockFinancialRatioRepository stockFinancialRatioRepository;
 
 	private StockScreenerServiceImpl stockScreenerService;
 
 	@BeforeEach
 	void setUp() {
-		stockScreenerService = new StockScreenerServiceImpl(stockOverviewRepository, stockFinancialRatioRepository);
+		stockScreenerService = new StockScreenerServiceImpl(
+				stockOverviewRepository, 
+				stockRatioRepository, 
+				stockFinancialRatioRepository
+		);
 	}
 
 	@Test

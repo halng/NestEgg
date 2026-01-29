@@ -28,10 +28,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/stocks")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class StockScreenerController {
 	private final StockScreenerService stockScreenerService;
+
+	@GetMapping
+	public ApiRes getStockList(
+			@RequestParam(required = false, defaultValue = "symbol") String sortBy,
+			@RequestParam(required = false, defaultValue = "asc") String sortOrder
+	) {
+		return stockScreenerService.getStockList(sortBy, sortOrder);
+	}
 
 	@PostMapping("/screen")
 	public ApiRes screenStocks(@RequestBody ScreeningCriteria criteria) {

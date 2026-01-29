@@ -14,14 +14,19 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.services.impl;
 
+import com.nestegg.portfolio.management.api.dto.ApiRes;
 import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
+import com.nestegg.portfolio.management.api.dto.StockOverviewView;
 import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
 import com.nestegg.portfolio.management.api.entities.StockFinancialRatio;
 import com.nestegg.portfolio.management.api.entities.StockOverview;
+import com.nestegg.portfolio.management.api.entities.StockRatio;
 import com.nestegg.portfolio.management.api.repositories.StockFinancialRatioRepository;
 import com.nestegg.portfolio.management.api.repositories.StockOverviewRepository;
+import com.nestegg.portfolio.management.api.repositories.StockRatioRepository;
+import com.nestegg.portfolio.management.api.services.StockScreenerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -36,7 +41,52 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class StockScreenerServiceImpl implements StockScreenerService {
 	private final StockOverviewRepository stockOverviewRepository;
+	private final StockRatioRepository stockRatioRepository;
 	private final StockFinancialRatioRepository stockFinancialRatioRepository;
+
+	@Override
+	public ApiRes getStockList(String sortBy, String sortOrder) {
+		// Validate parameters
+		if (!isValidSortBy(sortBy)) {
+			return ApiRes.badRequest("Invalid sortBy parameter. Allowed values: symbol, marketCap");
+		}
+		if (!isValidSortOrder(sortOrder)) {
+			return ApiRes.badRequest("Invalid sortOrder parameter. Allowed values: asc, desc");
+		}
+
+		// Get all stock overviews
+		Iterable<StockOverview> stockOverviews = stockOverviewRepository.findAll();
+		
+		// Get all stock ratios at once to avoid N+1 query problem
+		Iterable<StockRatio> stockRatios = stockRatioRepository.findAll();
+		Map<String, Double> marketCapMap = StreamSupport.stream(stockRatios.spliterator(), false)
+				.collect(Collectors.toMap(
+						StockRatio::getTicker,
+						ratio -> ratio.getCapitalize(),
+						(existing, replacement) -> existing
+				));
+		
+		List<StockOverviewView> stockList = StreamSupport.stream(stockOverviews.spliterator(), false)
+				.filter(stock -> stock.getIsActive() && !stock.getIsDeleted())
+				.map(stock -> {
+					Double marketCap = marketCapMap.get(stock.getSymbol());
+					
+					return StockOverviewView.builder()
+							.symbol(stock.getSymbol())
+							.name(stock.getName())
+							.exchange(stock.getExchange())
+							.marketCap(marketCap)
+							.build();
+				})
+				.sorted(getComparator(sortBy, sortOrder))
+				.toList();
+
+		if (stockList.isEmpty()) {
+			return ApiRes.ok("No market data available. Please synchronize data first.", stockList);
+		}
+
+		return ApiRes.ok("Stock list retrieved successfully", stockList);
+	}
 
 	@Override
 	public List<StockScreeningResult> screenStocks(ScreeningCriteria criteria) {
@@ -65,7 +115,36 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 			return Collections.emptyList();
 		}
 	}
-	
+
+	private boolean isValidSortBy(String sortBy) {
+		return "symbol".equalsIgnoreCase(sortBy) || "marketCap".equalsIgnoreCase(sortBy);
+	}
+
+	private boolean isValidSortOrder(String sortOrder) {
+		return "asc".equalsIgnoreCase(sortOrder) || "desc".equalsIgnoreCase(sortOrder);
+	}
+
+	private Comparator<StockOverviewView> getComparator(String sortBy, String sortOrder) {
+		boolean ascending = "asc".equalsIgnoreCase(sortOrder);
+		
+		Comparator<StockOverviewView> comparator;
+		
+		if ("marketCap".equalsIgnoreCase(sortBy)) {
+			comparator = Comparator.comparing(
+					StockOverviewView::getMarketCap,
+					Comparator.nullsLast(Comparator.naturalOrder())
+			);
+		} else {
+			// Default to alphabetical by symbol
+			comparator = Comparator.comparing(
+					StockOverviewView::getSymbol,
+					Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+			);
+		}
+		
+		return ascending ? comparator : comparator.reversed();
+	}
+
 	private Map<String, StockFinancialRatio> getLatestFinancialRatios() {
 		List<StockFinancialRatio> allRatios = stockFinancialRatioRepository.findAll(
 				Sort.by(Sort.Direction.DESC, "year", "quarter")
