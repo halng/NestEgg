@@ -62,16 +62,16 @@ public class StockScreenerController {
 				.code(200)
 				.message("Screening completed successfully with explainability")
 				.data(results)
-				.build());
+				.build();
 	}
 
 	@GetMapping("/{ticker}/metrics")
 	public ApiRes<StockMetricsDetail> getStockMetrics(@PathVariable String ticker) {
 		StockMetricsDetail metrics = stockScreenerService.getStockMetrics(ticker);
-		return ResponseEntity.ok(ApiRes.<StockMetricsDetail>>builder()
+		return ApiRes.<StockMetricsDetail>builder()
 				.code(200)
 				.message("Metrics retrieved successfully")
 				.data(metrics)
-				.build());
+				.build();
 	}
 }
