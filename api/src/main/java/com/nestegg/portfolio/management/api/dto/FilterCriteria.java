@@ -14,18 +14,24 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.dto;
 
-import com.nestegg.portfolio.management.api.dto.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
-import java.util.List;
-
-public interface StockScreenerService {
-	// Basic screening (from milestone-01)
-	ApiRes getStockList(String sortBy, String sortOrder);
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FilterCriteria {
+	@NotBlank(message = "Metric name is required")
+	private String metricName;
 	
-	// Explainability features (from User Story 3)
-	List<StockScreenResult> screenStocksWithExplainability(ScreenRequest request);
-	StockMetricsDetail getStockMetrics(String ticker);
+	@NotBlank(message = "Operator is required")
+	private String operator; // "GT", "LT", "GTE", "LTE", "EQ", "BETWEEN"
+	
+	private Double minValue;
+	private Double maxValue;
 }
