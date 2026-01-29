@@ -18,8 +18,7 @@ export default function Home() {
             Welcome to NestEgg
           </h1>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Your privacy-first, offline-capable personal finance and asset management platform.
-            Discover stocks that meet your investment criteria.
+            Your privacy-first, offline-capable personal finance and asset management platform for discovering stocks that meet your investment criteria.
           </p>
         </div>
         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
