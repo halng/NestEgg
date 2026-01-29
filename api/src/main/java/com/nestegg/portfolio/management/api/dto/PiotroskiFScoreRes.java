@@ -25,7 +25,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PiotroskiFScoreResult {
+public class PiotroskiFScoreRes {
 	private String ticker;
 	private Integer year;
 	private Integer quarter;

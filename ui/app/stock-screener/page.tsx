@@ -20,7 +20,7 @@ interface ApiResponse {
 type SortBy = 'symbol' | 'marketCap';
 type SortOrder = 'asc' | 'desc';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9009/api/v1/portfolio-management';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export default function StockScreener() {
   const [stocks, setStocks] = useState<Stock[]>([]);

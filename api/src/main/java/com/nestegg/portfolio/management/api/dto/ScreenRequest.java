@@ -27,5 +27,5 @@ import java.util.List;
 @AllArgsConstructor
 public class ScreenRequest {
 	@NotNull
-	private List<FilterCriteria> filters;
+	private List<FilterCriteriaReq> filters;
 }

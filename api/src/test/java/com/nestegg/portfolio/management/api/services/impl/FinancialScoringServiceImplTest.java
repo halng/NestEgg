@@ -16,8 +16,8 @@
 
 package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.dto.AltmanZScoreResult;
-import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreResult;
+import com.nestegg.portfolio.management.api.dto.AltmanZScoreRes;
+import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreRes;
 import com.nestegg.portfolio.management.api.entities.StockBalanceSheet;
 import com.nestegg.portfolio.management.api.entities.StockCashFlow;
 import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
@@ -146,7 +146,7 @@ class FinancialScoringServiceImplTest {
 				.thenReturn(Optional.of(currentCashFlow));
 
 		// Act
-		PiotroskiFScoreResult result = financialScoringService.calculatePiotroskiFScore("VNM", 2024, 4);
+		PiotroskiFScoreRes result = financialScoringService.calculatePiotroskiFScore("VNM", 2024, 4);
 
 		// Assert
 		assertNotNull(result);
@@ -174,7 +174,7 @@ class FinancialScoringServiceImplTest {
 				.thenReturn(Optional.of(currentCashFlow));
 
 		// Act
-		PiotroskiFScoreResult result = financialScoringService.calculatePiotroskiFScore("VNM", 2024, 1);
+		PiotroskiFScoreRes result = financialScoringService.calculatePiotroskiFScore("VNM", 2024, 1);
 
 		// Assert
 		assertNotNull(result);

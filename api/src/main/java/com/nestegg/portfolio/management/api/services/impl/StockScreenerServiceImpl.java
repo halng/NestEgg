@@ -96,7 +96,7 @@ StockRatio ratio = ratioMap.get(overview.getSymbol());
 boolean passesAllFilters = true;
 Map<String, StockMetrics> visibleMetricsMap = new LinkedHashMap<>();
 
-for (FilterCriteria filter : filters) {
+for (FilterCriteriaReq filter : filters) {
 Double metricValue = getMetricValue(overview, ratio, filter.getMetricName());
 
 if (metricValue == null) {
@@ -252,7 +252,7 @@ clazz = clazz.getSuperclass();
 return null;
 }
 
-private boolean evaluateFilter(Double value, FilterCriteria filter) {
+private boolean evaluateFilter(Double value, FilterCriteriaReq filter) {
 if (filter.getMinValue() == null && !filter.getOperator().equalsIgnoreCase("EQ")) {
 return false;
 }
@@ -297,7 +297,7 @@ clazz = clazz.getSuperclass();
 }
 }
 
-private List<StockScreenResult> getAllStocksAsResults(List<FilterCriteria> filters) {
+private List<StockScreenResult> getAllStocksAsResults(List<FilterCriteriaReq> filters) {
 Iterable<StockOverview> allOverviews = stockOverviewRepository.findAll();
 return StreamSupport.stream(allOverviews.spliterator(), false)
 .map(overview -> StockScreenResult.builder()

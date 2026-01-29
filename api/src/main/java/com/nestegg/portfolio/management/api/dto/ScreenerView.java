@@ -20,6 +20,6 @@ import java.time.Instant;
 import java.util.List;
 
 public record ScreenerView(String id, String name, String description, String userId,
-						   List<CriteriaDto> criteria, Instant createdAt, Instant updatedAt,
+						   List<CriteriaRes> criteria, Instant createdAt, Instant updatedAt,
 						   Boolean isActive, Boolean isDeleted) {
 }
