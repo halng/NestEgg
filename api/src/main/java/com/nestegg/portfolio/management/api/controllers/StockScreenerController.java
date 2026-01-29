@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/stocks")
+@CrossOrigin(origins = "*")
 public class StockScreenerController {
 
 	private final StockScreenerService stockScreenerService;

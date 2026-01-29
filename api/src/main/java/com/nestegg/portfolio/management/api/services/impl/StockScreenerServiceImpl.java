@@ -27,6 +27,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -43,16 +45,30 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 
 	@Override
 	public ApiRes getStockList(String sortBy, String sortOrder) {
+		// Validate parameters
+		if (!isValidSortBy(sortBy)) {
+			return ApiRes.badRequest("Invalid sortBy parameter. Allowed values: symbol, marketCap");
+		}
+		if (!isValidSortOrder(sortOrder)) {
+			return ApiRes.badRequest("Invalid sortOrder parameter. Allowed values: asc, desc");
+		}
+
 		// Get all stock overviews
 		Iterable<StockOverview> stockOverviews = stockOverviewRepository.findAll();
+		
+		// Get all stock ratios at once to avoid N+1 query problem
+		Iterable<StockRatio> stockRatios = stockRatioRepository.findAll();
+		Map<String, Double> marketCapMap = StreamSupport.stream(stockRatios.spliterator(), false)
+				.collect(Collectors.toMap(
+						StockRatio::getTicker,
+						ratio -> ratio.getCapitalize(),
+						(existing, replacement) -> existing
+				));
 		
 		List<StockOverviewView> stockList = StreamSupport.stream(stockOverviews.spliterator(), false)
 				.filter(stock -> stock.getIsActive() && !stock.getIsDeleted())
 				.map(stock -> {
-					// Get market cap from StockRatio
-					Double marketCap = stockRatioRepository.findByTicker(stock.getSymbol())
-							.map(StockRatio::getCapitalize)
-							.orElse(null);
+					Double marketCap = marketCapMap.get(stock.getSymbol());
 					
 					return StockOverviewView.builder()
 							.symbol(stock.getSymbol())
@@ -69,6 +85,14 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 		}
 
 		return ApiRes.ok("Stock list retrieved successfully", stockList);
+	}
+
+	private boolean isValidSortBy(String sortBy) {
+		return "symbol".equalsIgnoreCase(sortBy) || "marketCap".equalsIgnoreCase(sortBy);
+	}
+
+	private boolean isValidSortOrder(String sortOrder) {
+		return "asc".equalsIgnoreCase(sortOrder) || "desc".equalsIgnoreCase(sortOrder);
 	}
 
 	private Comparator<StockOverviewView> getComparator(String sortBy, String sortOrder) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Stock {
   symbol: string;
@@ -20,6 +20,8 @@ interface ApiResponse {
 type SortBy = 'symbol' | 'marketCap';
 type SortOrder = 'asc' | 'desc';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9009/api/v1/portfolio-management';
+
 export default function StockScreener() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,16 +29,12 @@ export default function StockScreener() {
   const [sortBy, setSortBy] = useState<SortBy>('symbol');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-  useEffect(() => {
-    fetchStocks();
-  }, [sortBy, sortOrder]);
-
-  const fetchStocks = async () => {
+  const fetchStocks = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(
-        `http://localhost:9009/api/v1/portfolio-management/stocks?sortBy=${sortBy}&sortOrder=${sortOrder}`
+        `${API_BASE_URL}/stocks?sortBy=${sortBy}&sortOrder=${sortOrder}`
       );
       
       if (!response.ok) {
@@ -51,7 +49,11 @@ export default function StockScreener() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sortBy, sortOrder]);
+
+  useEffect(() => {
+    fetchStocks();
+  }, [fetchStocks]);
 
   const handleSortChange = (newSortBy: SortBy) => {
     if (sortBy === newSortBy) {
