@@ -20,7 +20,11 @@ import com.nestegg.portfolio.management.api.entities.StockCashFlow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StockCashFlowRepository extends JpaRepository<StockCashFlow, Long> {
 	boolean existsByTicker(String ticker);
+	
+	Optional<StockCashFlow> findByTickerAndYearAndQuarter(String ticker, Integer year, Integer quarter);
 }
