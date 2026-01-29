@@ -20,8 +20,11 @@ import com.nestegg.portfolio.management.api.entities.StockBalanceSheet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StockBalanceSheetRepository extends JpaRepository<StockBalanceSheet, Long> {
 	boolean existsByUniqueHash(String uniqueHash);
 	boolean existsByTicker(String ticker);
+	Optional<StockBalanceSheet> findByTickerAndYearAndQuarter(String ticker, Integer year, Integer quarter);
 }
