@@ -17,14 +17,12 @@
 package com.nestegg.portfolio.management.api.services;
 
 import com.nestegg.portfolio.management.api.dto.ApiRes;
-
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
 import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
 import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
 
 import java.util.List;
 
 public interface StockScreenerService {
+	ApiRes getStockList(String sortBy, String sortOrder);
 	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
 }

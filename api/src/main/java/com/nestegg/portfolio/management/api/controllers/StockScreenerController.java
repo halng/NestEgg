@@ -17,26 +17,6 @@
 package com.nestegg.portfolio.management.api.controllers;
 
 import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.services.StockScreenerService;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/stocks")
-@CrossOrigin(origins = "*")
-public class StockScreenerController {
-
-	private final StockScreenerService stockScreenerService;
-
-	public StockScreenerController(StockScreenerService stockScreenerService) {
-		this.stockScreenerService = stockScreenerService;
-	}
-
-	@GetMapping
-	public ApiRes getStockList(
-			@RequestParam(required = false, defaultValue = "symbol") String sortBy,
-			@RequestParam(required = false, defaultValue = "asc") String sortOrder
-	) {
-		return stockScreenerService.getStockList(sortBy, sortOrder);
 import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
 import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
 import com.nestegg.portfolio.management.api.services.StockScreenerService;
@@ -48,10 +28,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/stocks")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class StockScreenerController {
 	private final StockScreenerService stockScreenerService;
+
+	@GetMapping
+	public ApiRes getStockList(
+			@RequestParam(required = false, defaultValue = "symbol") String sortBy,
+			@RequestParam(required = false, defaultValue = "asc") String sortOrder
+	) {
+		return stockScreenerService.getStockList(sortBy, sortOrder);
+	}
 
 	@PostMapping("/screen")
 	public ApiRes screenStocks(@RequestBody ScreeningCriteria criteria) {
