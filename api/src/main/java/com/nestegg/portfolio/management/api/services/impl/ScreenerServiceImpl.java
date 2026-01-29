@@ -17,7 +17,7 @@
 package com.nestegg.portfolio.management.api.services.impl;
 
 import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.CriteriaDto;
+import com.nestegg.portfolio.management.api.dto.CriteriaRes;
 import com.nestegg.portfolio.management.api.dto.ScreenerCreate;
 import com.nestegg.portfolio.management.api.dto.ScreenerView;
 import com.nestegg.portfolio.management.api.entities.Screener;
@@ -61,7 +61,7 @@ public class ScreenerServiceImpl implements ScreenerService {
 		}
 
 		// Validate individual criteria fields
-		for (CriteriaDto criterion : req.criteria()) {
+		for (CriteriaRes criterion : req.criteria()) {
 			if (StringValidators.isNullOrEmpty(criterion.field()) ||
 				StringValidators.isNullOrEmpty(criterion.operator()) ||
 				StringValidators.isNullOrEmpty(criterion.value())) {
@@ -129,7 +129,7 @@ public class ScreenerServiceImpl implements ScreenerService {
 		}
 
 		// Validate individual criteria fields
-		for (CriteriaDto criterion : req.criteria()) {
+		for (CriteriaRes criterion : req.criteria()) {
 			if (StringValidators.isNullOrEmpty(criterion.field()) ||
 				StringValidators.isNullOrEmpty(criterion.operator()) ||
 				StringValidators.isNullOrEmpty(criterion.value())) {
@@ -173,8 +173,8 @@ public class ScreenerServiceImpl implements ScreenerService {
 		Screener screener = screenerRepository.findByIdAndIsDeletedFalse(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Screener not found with id: " + id));
 
-		List<CriteriaDto> criteriaDtos = screener.getCriteria().stream()
-				.map(c -> new CriteriaDto(c.getField(), c.getOperator(), c.getValue()))
+		List<CriteriaRes> criteriaDtos = screener.getCriteria().stream()
+				.map(c -> new CriteriaRes(c.getField(), c.getOperator(), c.getValue()))
 				.toList();
 
 		ScreenerView view = new ScreenerView(
@@ -204,8 +204,8 @@ public class ScreenerServiceImpl implements ScreenerService {
 
 		List<ScreenerView> screenerViews = screeners.stream()
 				.map(screener -> {
-					List<CriteriaDto> criteriaDtos = screener.getCriteria().stream()
-							.map(c -> new CriteriaDto(c.getField(), c.getOperator(), c.getValue()))
+					List<CriteriaRes> criteriaDtos = screener.getCriteria().stream()
+							.map(c -> new CriteriaRes(c.getField(), c.getOperator(), c.getValue()))
 							.toList();
 
 					return new ScreenerView(

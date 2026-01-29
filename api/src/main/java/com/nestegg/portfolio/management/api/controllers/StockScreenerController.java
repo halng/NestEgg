@@ -21,13 +21,12 @@ import com.nestegg.portfolio.management.api.services.StockScreenerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/stocks")
+@RequestMapping("stocks")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
@@ -57,9 +56,9 @@ public class StockScreenerController {
 
 	// Explainability endpoints for User Story 3
 	@PostMapping("/screen/explainable")
-	public ResponseEntity<ApiRes<List<StockScreenResult>>> screenStocksWithExplainability(@Valid @RequestBody ScreenRequest request) {
+	public ApiRes<List<StockScreenResult>> screenStocksWithExplainability(@Valid @RequestBody ScreenRequest request) {
 		List<StockScreenResult> results = stockScreenerService.screenStocksWithExplainability(request);
-		return ResponseEntity.ok(ApiRes.<List<StockScreenResult>>builder()
+		return ApiRes.<List<StockScreenResult>>builder()
 				.code(200)
 				.message("Screening completed successfully with explainability")
 				.data(results)
@@ -67,7 +66,7 @@ public class StockScreenerController {
 	}
 
 	@GetMapping("/{ticker}/metrics")
-	public ResponseEntity<ApiRes<StockMetricsDetail>> getStockMetrics(@PathVariable String ticker) {
+	public ApiRes<StockMetricsDetail> getStockMetrics(@PathVariable String ticker) {
 		StockMetricsDetail metrics = stockScreenerService.getStockMetrics(ticker);
 		return ResponseEntity.ok(ApiRes.<StockMetricsDetail>>builder()
 				.code(200)

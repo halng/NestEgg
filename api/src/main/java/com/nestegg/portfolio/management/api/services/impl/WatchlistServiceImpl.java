@@ -115,6 +115,9 @@ public class WatchlistServiceImpl implements WatchlistService {
 	@Transactional
 	public ApiRes removeFromWatchlist(String id) {
 		log.info("Removing stock from watchlist: id={}", id);
+		
+		// TODO: Add authorization check to verify the user owns this watchlist entry
+		// Currently missing user context - need to implement Spring Security or similar
 
 		return watchlistRepository.findById(id)
 			.filter(entry -> !entry.getIsDeleted())

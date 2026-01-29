@@ -25,7 +25,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScreenerCriteria {
+public class ScreenerCriteria extends AuditEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)

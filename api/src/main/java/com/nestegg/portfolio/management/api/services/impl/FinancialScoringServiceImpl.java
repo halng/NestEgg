@@ -16,8 +16,8 @@
 
 package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.dto.AltmanZScoreResult;
-import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreResult;
+import com.nestegg.portfolio.management.api.dto.AltmanZScoreRes;
+import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreRes;
 import com.nestegg.portfolio.management.api.entities.StockBalanceSheet;
 import com.nestegg.portfolio.management.api.entities.StockCashFlow;
 import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
@@ -57,7 +57,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 	}
 
 	@Override
-	public PiotroskiFScoreResult calculatePiotroskiFScore(String ticker, Integer year, Integer quarter) {
+	public PiotroskiFScoreRes calculatePiotroskiFScore(String ticker, Integer year, Integer quarter) {
 		LOGGER.info("Calculating Piotroski F-Score for ticker: {}, year: {}, quarter: {}", ticker, year, quarter);
 		
 		StockBalanceSheet currentBalance = getBalanceSheet(ticker, year, quarter);
@@ -90,7 +90,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 		
 		LOGGER.info("Piotroski F-Score calculated for {}: {} - {}", ticker, totalScore, healthAssessment);
 		
-		return PiotroskiFScoreResult.builder()
+		return PiotroskiFScoreRes.builder()
 				.ticker(ticker)
 				.year(year)
 				.quarter(quarter)
@@ -101,7 +101,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 	}
 
 	@Override
-	public AltmanZScoreResult calculateAltmanZScore(String ticker, Integer year, Integer quarter) {
+	public AltmanZScoreRes calculateAltmanZScore(String ticker, Integer year, Integer quarter) {
 		LOGGER.info("Calculating Altman Z-Score for ticker: {}, year: {}, quarter: {}", ticker, year, quarter);
 		
 		StockBalanceSheet balanceSheet = getBalanceSheet(ticker, year, quarter);
@@ -134,7 +134,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 		
 		LOGGER.info("Altman Z-Score calculated for {}: {} - {}", ticker, zScore, riskAssessment);
 		
-		return AltmanZScoreResult.builder()
+		return AltmanZScoreRes.builder()
 				.ticker(ticker)
 				.year(year)
 				.quarter(quarter)

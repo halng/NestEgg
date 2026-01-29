@@ -17,7 +17,7 @@
 package com.nestegg.portfolio.management.api.services.impl;
 
 import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.CriteriaDto;
+import com.nestegg.portfolio.management.api.dto.CriteriaRes;
 import com.nestegg.portfolio.management.api.dto.ScreenerCreate;
 import com.nestegg.portfolio.management.api.entities.Screener;
 import com.nestegg.portfolio.management.api.entities.ScreenerCriteria;
@@ -54,9 +54,9 @@ class ScreenerServiceImplTest {
 
 	@BeforeEach
 	void setUp() {
-		List<CriteriaDto> criteria = List.of(
-				new CriteriaDto("peRatio", "lessThan", "15"),
-				new CriteriaDto("marketCap", "lessThan", "50000000000")
+		List<CriteriaRes> criteria = List.of(
+				new CriteriaRes("peRatio", "lessThan", "15"),
+				new CriteriaRes("marketCap", "lessThan", "50000000000")
 		);
 
 		validScreenerCreate = new ScreenerCreate(
@@ -107,7 +107,7 @@ class ScreenerServiceImplTest {
 				null,
 				"Description",
 				"user-123",
-				List.of(new CriteriaDto("field", "operator", "value"))
+				List.of(new CriteriaRes("field", "operator", "value"))
 		);
 
 		// Act
@@ -244,7 +244,7 @@ class ScreenerServiceImplTest {
 				"Test Screener",
 				"Description",
 				"user-123",
-				List.of(new CriteriaDto("", "operator", "value"))
+				List.of(new CriteriaRes("", "operator", "value"))
 		);
 
 		// Act
@@ -268,7 +268,7 @@ class ScreenerServiceImplTest {
 				"Updated Name",
 				"Updated Description",
 				"user-456", // Different user attempting to take ownership
-				List.of(new CriteriaDto("field", "operator", "value"))
+				List.of(new CriteriaRes("field", "operator", "value"))
 		);
 
 		when(screenerRepository.findByIdAndIsDeletedFalse(anyString())).thenReturn(Optional.of(mockScreener));

@@ -105,7 +105,7 @@ void testScreenStocks_WithPEFilter_ReturnsMatchingStocks() {
 when(stockOverviewRepository.findAll()).thenReturn(Arrays.asList(stockOverview1, stockOverview2));
 when(stockRatioRepository.findAll()).thenReturn(Arrays.asList(stockRatio1, stockRatio2));
 
-FilterCriteria filter = FilterCriteria.builder()
+FilterCriteriaReq filter = FilterCriteriaReq.builder()
 .metricName("priceToEarning")
 .operator("LT")
 .minValue(20.0)
@@ -130,13 +130,13 @@ void testScreenStocks_WithMultipleFilters_ReturnsMatchingStocks() {
 when(stockOverviewRepository.findAll()).thenReturn(Arrays.asList(stockOverview1, stockOverview2));
 when(stockRatioRepository.findAll()).thenReturn(Arrays.asList(stockRatio1, stockRatio2));
 
-FilterCriteria filter1 = FilterCriteria.builder()
+FilterCriteriaReq filter1 = FilterCriteriaReq.builder()
 .metricName("priceToEarning")
 .operator("LT")
 .minValue(20.0)
 .build();
 
-FilterCriteria filter2 = FilterCriteria.builder()
+FilterCriteriaReq filter2 = FilterCriteriaReq.builder()
 .metricName("roe")
 .operator("GTE")
 .minValue(19.0)
@@ -160,7 +160,7 @@ stockRatio1.setPriceToEarning(null);
 when(stockOverviewRepository.findAll()).thenReturn(Arrays.asList(stockOverview1, stockOverview2));
 when(stockRatioRepository.findAll()).thenReturn(Arrays.asList(stockRatio1, stockRatio2));
 
-FilterCriteria filter = FilterCriteria.builder()
+FilterCriteriaReq filter = FilterCriteriaReq.builder()
 .metricName("priceToEarning")
 .operator("LT")
 .minValue(20.0)
@@ -203,7 +203,7 @@ void testScreenStocks_WithBetweenOperator_ReturnsMatchingStocks() {
 when(stockOverviewRepository.findAll()).thenReturn(Arrays.asList(stockOverview1, stockOverview2));
 when(stockRatioRepository.findAll()).thenReturn(Arrays.asList(stockRatio1, stockRatio2));
 
-FilterCriteria filter = FilterCriteria.builder()
+FilterCriteriaReq filter = FilterCriteriaReq.builder()
 .metricName("priceToEarning")
 .operator("BETWEEN")
 .minValue(10.0)

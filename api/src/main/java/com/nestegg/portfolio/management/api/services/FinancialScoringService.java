@@ -16,10 +16,10 @@
 
 package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.dto.AltmanZScoreResult;
-import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreResult;
+import com.nestegg.portfolio.management.api.dto.AltmanZScoreRes;
+import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreRes;
 
 public interface FinancialScoringService {
-	PiotroskiFScoreResult calculatePiotroskiFScore(String ticker, Integer year, Integer quarter);
-	AltmanZScoreResult calculateAltmanZScore(String ticker, Integer year, Integer quarter);
+	PiotroskiFScoreRes calculatePiotroskiFScore(String ticker, Integer year, Integer quarter);
+	AltmanZScoreRes calculateAltmanZScore(String ticker, Integer year, Integer quarter);
 }

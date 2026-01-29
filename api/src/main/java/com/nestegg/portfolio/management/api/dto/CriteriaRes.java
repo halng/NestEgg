@@ -16,22 +16,7 @@
 
 package com.nestegg.portfolio.management.api.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.NonNull;
 
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class FilterCriteria {
-	@NotBlank(message = "Metric name is required")
-	private String metricName;
-	
-	@NotBlank(message = "Operator is required")
-	private String operator; // "GT", "LT", "GTE", "LTE", "EQ", "BETWEEN"
-	
-	private Double minValue;
-	private Double maxValue;
+public record CriteriaRes(@NonNull String field, @NonNull String operator, @NonNull String value) {
 }

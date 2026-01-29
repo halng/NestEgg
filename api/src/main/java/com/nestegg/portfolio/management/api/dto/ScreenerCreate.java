@@ -21,5 +21,5 @@ import lombok.NonNull;
 import java.util.List;
 
 public record ScreenerCreate(@NonNull String name, String description, @NonNull String userId,
-							 @NonNull List<CriteriaDto> criteria) {
+							 @NonNull List<CriteriaRes> criteria) {
 }

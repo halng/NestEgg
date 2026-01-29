@@ -23,7 +23,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AltmanZScoreResult {
+public class AltmanZScoreRes {
 	private String ticker;
 	private Integer year;
 	private Integer quarter;

@@ -47,7 +47,7 @@ public class WatchlistController {
 		return this.watchlistService.getWatchlistEntryById(id);
 	}
 
-	@DeleteMapping("/{id}")
+	@PatchMapping("/{id}")
 	public ApiRes removeFromWatchlist(@PathVariable String id) {
 		return this.watchlistService.removeFromWatchlist(id);
 	}
