@@ -197,3 +197,26 @@ stockScreenerService.getStockMetrics("INVALID");
 });
 }
 }
+
+@Test
+void testScreenStocks_WithBetweenOperator_ReturnsMatchingStocks() {
+when(stockOverviewRepository.findAll()).thenReturn(Arrays.asList(stockOverview1, stockOverview2));
+when(stockRatioRepository.findAll()).thenReturn(Arrays.asList(stockRatio1, stockRatio2));
+
+FilterCriteria filter = FilterCriteria.builder()
+.metricName("priceToEarning")
+.operator("BETWEEN")
+.minValue(10.0)
+.maxValue(20.0)
+.build();
+
+ScreenRequest request = ScreenRequest.builder()
+.filters(Collections.singletonList(filter))
+.build();
+
+List<StockScreenResult> results = stockScreenerService.screenStocks(request);
+
+assertEquals(1, results.size());
+assertEquals("AAPL", results.get(0).getTicker());
+}
+}

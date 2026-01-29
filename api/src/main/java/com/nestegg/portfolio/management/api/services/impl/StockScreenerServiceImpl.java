@@ -57,7 +57,7 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 			
 			// Evaluate filters
 			boolean passesAllFilters = true;
-			List<StockMetrics> visibleMetrics = new ArrayList<>();
+			Map<String, StockMetrics> visibleMetricsMap = new LinkedHashMap<>();
 			Set<String> filterMetricNames = filters.stream()
 					.map(FilterCriteria::getMetricName)
 					.collect(Collectors.toSet());
@@ -78,7 +78,8 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 				}
 
 				// Add to visible metrics (AC-1: metrics used by active filters are visible)
-				visibleMetrics.add(StockMetrics.builder()
+				// Use map to avoid duplicates
+				visibleMetricsMap.put(filter.getMetricName(), StockMetrics.builder()
 						.metricName(filter.getMetricName())
 						.value(metricValue)
 						.usedInFilter(true)
@@ -91,7 +92,7 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 						.name(overview.getName())
 						.exchange(overview.getExchange())
 						.industry(overview.getIndustry())
-						.visibleMetrics(visibleMetrics)
+						.visibleMetrics(new ArrayList<>(visibleMetricsMap.values()))
 						.build());
 			}
 		}
@@ -110,9 +111,9 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 		Map<String, Double> allMetrics = new HashMap<>();
 		
 		// Add all metrics from overview and ratio
-		addMetricsFromObject(allMetrics, overview, "overview");
+		addMetricsFromObject(allMetrics, overview);
 		if (ratio != null) {
-			addMetricsFromObject(allMetrics, ratio, "ratio");
+			addMetricsFromObject(allMetrics, ratio);
 		}
 
 		return StockMetricsDetail.builder()
@@ -169,6 +170,10 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 	}
 
 	private boolean evaluateFilter(Double value, FilterCriteria filter) {
+		if (filter.getMinValue() == null && !filter.getOperator().equalsIgnoreCase("EQ")) {
+			return false; // Invalid filter without minValue
+		}
+		
 		switch (filter.getOperator().toUpperCase()) {
 			case "GT":
 				return value > filter.getMinValue();
@@ -179,15 +184,17 @@ public class StockScreenerServiceImpl implements StockScreenerService {
 			case "LTE":
 				return value <= filter.getMinValue();
 			case "EQ":
-				return value.equals(filter.getMinValue());
+				return filter.getMinValue() != null && value.equals(filter.getMinValue());
 			case "BETWEEN":
-				return value >= filter.getMinValue() && value <= filter.getMaxValue();
+				return filter.getMaxValue() != null && 
+					   value >= filter.getMinValue() && 
+					   value <= filter.getMaxValue();
 			default:
 				return false;
 		}
 	}
 
-	private void addMetricsFromObject(Map<String, Double> metrics, Object obj, String prefix) {
+	private void addMetricsFromObject(Map<String, Double> metrics, Object obj) {
 		Class<?> clazz = obj.getClass();
 		while (clazz != null && clazz != Object.class) {
 			for (Field field : clazz.getDeclaredFields()) {

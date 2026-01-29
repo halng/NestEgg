@@ -47,6 +47,12 @@ export default function FilterControls({ onApplyFilters, isLoading }: FilterCont
   const updateFilter = (index: number, field: keyof FilterCriteria, value: string | number) => {
     const newFilters = [...filters];
     newFilters[index] = { ...newFilters[index], [field]: value };
+    
+    // Clear maxValue when operator changes from BETWEEN to something else
+    if (field === 'operator' && value !== 'BETWEEN') {
+      newFilters[index].maxValue = undefined;
+    }
+    
     setFilters(newFilters);
   };
 
@@ -93,7 +99,7 @@ export default function FilterControls({ onApplyFilters, isLoading }: FilterCont
             <input
               type="number"
               value={filter.minValue ?? ''}
-              onChange={(e) => updateFilter(index, 'minValue', parseFloat(e.target.value))}
+              onChange={(e) => updateFilter(index, 'minValue', e.target.value ? parseFloat(e.target.value) : undefined)}
               placeholder="Value"
               className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 w-32"
             />
@@ -104,7 +110,7 @@ export default function FilterControls({ onApplyFilters, isLoading }: FilterCont
                 <input
                   type="number"
                   value={filter.maxValue ?? ''}
-                  onChange={(e) => updateFilter(index, 'maxValue', parseFloat(e.target.value))}
+                  onChange={(e) => updateFilter(index, 'maxValue', e.target.value ? parseFloat(e.target.value) : undefined)}
                   placeholder="Max Value"
                   className="px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-50 w-32"
                 />

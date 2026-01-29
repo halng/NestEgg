@@ -17,7 +17,6 @@
 package com.nestegg.portfolio.management.api.dto;
 
 import lombok.*;
-import java.util.Map;
 
 @Getter
 @Setter

@@ -43,6 +43,22 @@ export default function MetricsDetailModal({ ticker, onClose }: MetricsDetailMod
     };
   }, [ticker]);
 
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (ticker) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [ticker, onClose]);
+
   if (!ticker) {
     return null;
   }
@@ -56,6 +72,7 @@ export default function MetricsDetailModal({ ticker, onClose }: MetricsDetailMod
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close details modal"
             className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 text-2xl leading-none"
           >
             ×
