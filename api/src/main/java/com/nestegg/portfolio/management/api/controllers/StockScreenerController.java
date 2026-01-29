@@ -20,47 +20,19 @@ import com.nestegg.portfolio.management.api.dto.*;
 import com.nestegg.portfolio.management.api.services.StockScreenerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
-import com.nestegg.portfolio.management.api.services.StockScreenerService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/stocks")
-@RequiredArgsConstructor
-public class StockScreenerController {
-
-	private final StockScreenerService stockScreenerService;
-
-	@PostMapping("/screen")
-	public ResponseEntity<ApiRes<List<StockScreenResult>>> screenStocks(@Valid @RequestBody ScreenRequest request) {
-		List<StockScreenResult> results = stockScreenerService.screenStocks(request);
-		return ResponseEntity.ok(ApiRes.<List<StockScreenResult>>builder()
-				.code(200)
-				.message("Screening completed successfully")
-				.data(results)
-				.build());
-	}
-
-	@GetMapping("/{ticker}/metrics")
-	public ResponseEntity<ApiRes<StockMetricsDetail>> getStockMetrics(@PathVariable String ticker) {
-		StockMetricsDetail metrics = stockScreenerService.getStockMetrics(ticker);
-		return ResponseEntity.ok(ApiRes.<StockMetricsDetail>builder()
-				.code(200)
-				.message("Metrics retrieved successfully")
-				.data(metrics)
-				.build());
-@RequestMapping("/stocks")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class StockScreenerController {
+
 	private final StockScreenerService stockScreenerService;
 
 	@GetMapping
@@ -81,5 +53,26 @@ public class StockScreenerController {
 			log.error("Error during stock screening", e);
 			return ApiRes.internalError("Failed to screen stocks: " + e.getMessage());
 		}
+	}
+
+	// Explainability endpoints for User Story 3
+	@PostMapping("/screen/explainable")
+	public ResponseEntity<ApiRes<List<StockScreenResult>>> screenStocksWithExplainability(@Valid @RequestBody ScreenRequest request) {
+		List<StockScreenResult> results = stockScreenerService.screenStocksWithExplainability(request);
+		return ResponseEntity.ok(ApiRes.<List<StockScreenResult>>builder()
+				.code(200)
+				.message("Screening completed successfully with explainability")
+				.data(results)
+				.build());
+	}
+
+	@GetMapping("/{ticker}/metrics")
+	public ResponseEntity<ApiRes<StockMetricsDetail>> getStockMetrics(@PathVariable String ticker) {
+		StockMetricsDetail metrics = stockScreenerService.getStockMetrics(ticker);
+		return ResponseEntity.ok(ApiRes.<StockMetricsDetail>>builder()
+				.code(200)
+				.message("Metrics retrieved successfully")
+				.data(metrics)
+				.build());
 	}
 }
