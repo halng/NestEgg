@@ -13,7 +13,6 @@ export default function Home() {
     clearAllFilters,
     filtersActive,
     totalStocks,
-    filteredCount,
   } = useStockScreening(mockStocks);
 
   return (

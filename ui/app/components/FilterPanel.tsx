@@ -4,7 +4,7 @@ import { ScreeningFilters } from '../types/stock';
 
 interface FilterPanelProps {
   filters: ScreeningFilters;
-  onFilterChange: (key: keyof ScreeningFilters, value: any) => void;
+  onFilterChange: (key: keyof ScreeningFilters, value: ScreeningFilters[keyof ScreeningFilters]) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }

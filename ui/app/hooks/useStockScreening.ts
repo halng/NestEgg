@@ -21,7 +21,7 @@ export function useStockScreening(stocks: Stock[]) {
   );
 
   // Update individual filter values
-  const updateFilter = (key: keyof ScreeningFilters, value: any) => {
+  const updateFilter = (key: keyof ScreeningFilters, value: ScreeningFilters[keyof ScreeningFilters]) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
