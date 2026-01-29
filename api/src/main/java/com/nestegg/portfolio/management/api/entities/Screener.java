@@ -14,21 +14,34 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.entities;
 
-import com.nestegg.portfolio.management.api.dto.*;
-import java.util.List;
-
-public interface StockScreenerService {
-	List<StockScreenResult> screenStocks(ScreenRequest request);
-	StockMetricsDetail getStockMetrics(String ticker);
-import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+@Getter
+@Setter
+@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Screener extends AuditEntity {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String id;
+
+	@Column(nullable = false)
+	private String name;
+
+	@Column(length = 500)
+	private String description;
+
+	@Column(nullable = false)
+	private String userId;
+
+	@OneToMany(mappedBy = "screener", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<ScreenerCriteria> criteria;
 }

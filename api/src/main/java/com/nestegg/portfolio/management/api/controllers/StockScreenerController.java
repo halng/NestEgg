@@ -21,6 +21,12 @@ import com.nestegg.portfolio.management.api.services.StockScreenerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import com.nestegg.portfolio.management.api.dto.ApiRes;
+import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
+import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import com.nestegg.portfolio.management.api.services.StockScreenerService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,5 +56,30 @@ public class StockScreenerController {
 				.message("Metrics retrieved successfully")
 				.data(metrics)
 				.build());
+@RequestMapping("/stocks")
+@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+@Slf4j
+public class StockScreenerController {
+	private final StockScreenerService stockScreenerService;
+
+	@GetMapping
+	public ApiRes getStockList(
+			@RequestParam(required = false, defaultValue = "symbol") String sortBy,
+			@RequestParam(required = false, defaultValue = "asc") String sortOrder
+	) {
+		return stockScreenerService.getStockList(sortBy, sortOrder);
+	}
+
+	@PostMapping("/screen")
+	public ApiRes screenStocks(@RequestBody ScreeningCriteria criteria) {
+		log.info("Received stock screening request");
+		try {
+			List<StockScreeningResult> results = stockScreenerService.screenStocks(criteria);
+			return ApiRes.ok("Stock screening completed successfully", results);
+		} catch (Exception e) {
+			log.error("Error during stock screening", e);
+			return ApiRes.internalError("Failed to screen stocks: " + e.getMessage());
+		}
 	}
 }

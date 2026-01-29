@@ -16,19 +16,10 @@
 
 package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.dto.*;
-import java.util.List;
+import com.nestegg.portfolio.management.api.dto.AltmanZScoreResult;
+import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreResult;
 
-public interface StockScreenerService {
-	List<StockScreenResult> screenStocks(ScreenRequest request);
-	StockMetricsDetail getStockMetrics(String ticker);
-import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
-
-import java.util.List;
-
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+public interface FinancialScoringService {
+	PiotroskiFScoreResult calculatePiotroskiFScore(String ticker, Integer year, Integer quarter);
+	AltmanZScoreResult calculateAltmanZScore(String ticker, Integer year, Integer quarter);
 }

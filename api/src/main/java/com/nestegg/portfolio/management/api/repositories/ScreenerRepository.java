@@ -14,21 +14,19 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.repositories;
 
-import com.nestegg.portfolio.management.api.dto.*;
-import java.util.List;
-
-public interface StockScreenerService {
-	List<StockScreenResult> screenStocks(ScreenRequest request);
-	StockMetricsDetail getStockMetrics(String ticker);
-import com.nestegg.portfolio.management.api.dto.ApiRes;
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import com.nestegg.portfolio.management.api.entities.Screener;
+import lombok.NonNull;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+@Repository
+public interface ScreenerRepository extends JpaRepository<Screener, String> {
+	boolean existsByNameAndUserId(@NonNull String name, @NonNull String userId);
+	List<Screener> findByUserIdAndIsDeletedFalse(@NonNull String userId);
+	Optional<Screener> findByIdAndIsDeletedFalse(@NonNull String id);
 }

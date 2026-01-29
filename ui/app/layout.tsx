@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "NestEgg Stock Screener",
   description: "Filter stocks by financial metrics with full explainability",
+  title: "NestEgg - Stock Screener",
+  description: "Privacy-first personal finance and asset management platform",
+  title: "NestEgg Stock Screener",
+  description: "Privacy-first stock screening with offline-capable filtering",
 };
 
 export default function RootLayout({
