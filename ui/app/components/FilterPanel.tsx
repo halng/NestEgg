@@ -20,6 +20,8 @@ export function FilterPanel({
 }: FilterPanelProps) {
   const handleMarketCapMinChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('marketCapRange', {
       ...filters.marketCapRange,
       min: numValue,
@@ -28,6 +30,8 @@ export function FilterPanel({
 
   const handleMarketCapMaxChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('marketCapRange', {
       ...filters.marketCapRange,
       max: numValue,
@@ -36,6 +40,8 @@ export function FilterPanel({
 
   const handlePERatioMinChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('peRatioRange', {
       ...filters.peRatioRange,
       min: numValue,
@@ -44,6 +50,8 @@ export function FilterPanel({
 
   const handlePERatioMaxChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('peRatioRange', {
       ...filters.peRatioRange,
       max: numValue,
@@ -52,16 +60,22 @@ export function FilterPanel({
 
   const handleROEMinChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('roeMinimum', numValue);
   };
 
   const handleDebtToEquityMaxChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('debtToEquityMaximum', numValue);
   };
 
   const handleRevenueGrowthMinChange = (value: string) => {
     const numValue = value === '' ? undefined : parseFloat(value);
+    // Guard against NaN
+    if (numValue !== undefined && isNaN(numValue)) return;
     onFilterChange('revenueGrowthMinimum', numValue);
   };
 
@@ -74,6 +88,7 @@ export function FilterPanel({
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
+            aria-label="Clear all filters"
             className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors"
           >
             Clear All
