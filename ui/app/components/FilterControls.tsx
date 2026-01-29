@@ -8,6 +8,9 @@ interface FilterControlsProps {
   isLoading: boolean;
 }
 
+// TODO: These metrics should be fetched from the backend API
+// Create an endpoint like GET /api/stocks/available-metrics that returns
+// the list of available metrics that can be used for filtering
 const AVAILABLE_METRICS = [
   { value: 'priceToEarning', label: 'P/E Ratio' },
   { value: 'priceToBook', label: 'P/B Ratio' },
