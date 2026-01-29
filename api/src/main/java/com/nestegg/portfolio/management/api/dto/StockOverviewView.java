@@ -25,5 +25,8 @@ public class StockOverviewView {
 	private String symbol;
 	private String name;
 	private String exchange;
+	private String industry;
 	private Double marketCap;
+	private Double rating;
+	private Boolean isActivelyTraded;
 }
