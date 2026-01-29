@@ -14,17 +14,32 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.entities;
 
-import com.nestegg.portfolio.management.api.dto.ApiRes;
+import jakarta.persistence.*;
+import lombok.*;
 
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import java.time.Instant;
 
-import java.util.List;
+@Getter
+@Setter
+@Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "watchlist_entries")
+public class WatchlistEntry extends AuditEntity {
 
-public interface StockScreenerService {
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	private String id;
+
+	@Column(nullable = false)
+	private String ticker;
+
+	@Column(nullable = false)
+	private String exchange;
+
+	@Column(nullable = false)
+	private Instant snapshotTimestamp;
 }

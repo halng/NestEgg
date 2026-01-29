@@ -14,17 +14,13 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.dto;
 
-import com.nestegg.portfolio.management.api.dto.ApiRes;
+import lombok.Builder;
 
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import java.time.Instant;
 
-import java.util.List;
-
-public interface StockScreenerService {
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+@Builder
+public record WatchlistEntryView(String id, String ticker, String exchange, Instant snapshotTimestamp,
+								 boolean isActive, boolean isDeleted) {
 }

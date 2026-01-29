@@ -14,17 +14,12 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.services;
+package com.nestegg.portfolio.management.api.repositories;
 
-import com.nestegg.portfolio.management.api.dto.ApiRes;
+import com.nestegg.portfolio.management.api.entities.ScreenerCriteria;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface StockScreenerService {
-	ApiRes getStockList(String sortBy, String sortOrder);
-import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
-import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
-
-import java.util.List;
-
-public interface StockScreenerService {
-	List<StockScreeningResult> screenStocks(ScreeningCriteria criteria);
+@Repository
+public interface ScreenerCriteriaRepository extends JpaRepository<ScreenerCriteria, String> {
 }

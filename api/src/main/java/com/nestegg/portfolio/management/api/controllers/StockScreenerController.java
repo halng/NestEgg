@@ -37,5 +37,31 @@ public class StockScreenerController {
 			@RequestParam(required = false, defaultValue = "asc") String sortOrder
 	) {
 		return stockScreenerService.getStockList(sortBy, sortOrder);
+import com.nestegg.portfolio.management.api.dto.ScreeningCriteria;
+import com.nestegg.portfolio.management.api.dto.StockScreeningResult;
+import com.nestegg.portfolio.management.api.services.StockScreenerService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/stocks")
+@RequiredArgsConstructor
+@Slf4j
+public class StockScreenerController {
+	private final StockScreenerService stockScreenerService;
+
+	@PostMapping("/screen")
+	public ApiRes screenStocks(@RequestBody ScreeningCriteria criteria) {
+		log.info("Received stock screening request");
+		try {
+			List<StockScreeningResult> results = stockScreenerService.screenStocks(criteria);
+			return ApiRes.ok("Stock screening completed successfully", results);
+		} catch (Exception e) {
+			log.error("Error during stock screening", e);
+			return ApiRes.internalError("Failed to screen stocks: " + e.getMessage());
+		}
 	}
 }
