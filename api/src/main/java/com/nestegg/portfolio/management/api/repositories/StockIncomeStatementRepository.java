@@ -20,9 +20,13 @@ import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StockIncomeStatementRepository extends JpaRepository<StockIncomeStatement, Long> {
 	boolean existsByUniqueHash(String uniqueHash);
 
 	boolean existsByTicker(String symbol);
+	
+	Optional<StockIncomeStatement> findByTickerAndYearAndQuarter(String ticker, Integer year, Integer quarter);
 }
