@@ -20,11 +20,15 @@ import com.nestegg.portfolio.management.api.dto.AltmanZScoreResult;
 import com.nestegg.portfolio.management.api.dto.ApiRes;
 import com.nestegg.portfolio.management.api.dto.PiotroskiFScoreResult;
 import com.nestegg.portfolio.management.api.services.FinancialScoringService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/financial-scoring")
+@Validated
 public class FinancialScoringController {
 
 	private final FinancialScoringService financialScoringService;
@@ -36,8 +40,8 @@ public class FinancialScoringController {
 	@GetMapping("/piotroski-fscore/{ticker}")
 	public ResponseEntity<ApiRes<PiotroskiFScoreResult>> getPiotroskiFScore(
 			@PathVariable String ticker,
-			@RequestParam Integer year,
-			@RequestParam Integer quarter) {
+			@RequestParam @Min(2000) @Max(2100) Integer year,
+			@RequestParam @Min(1) @Max(4) Integer quarter) {
 		PiotroskiFScoreResult result = financialScoringService.calculatePiotroskiFScore(ticker, year, quarter);
 		return ResponseEntity.ok(ApiRes.success(result));
 	}
@@ -45,8 +49,8 @@ public class FinancialScoringController {
 	@GetMapping("/altman-zscore/{ticker}")
 	public ResponseEntity<ApiRes<AltmanZScoreResult>> getAltmanZScore(
 			@PathVariable String ticker,
-			@RequestParam Integer year,
-			@RequestParam Integer quarter) {
+			@RequestParam @Min(2000) @Max(2100) Integer year,
+			@RequestParam @Min(1) @Max(4) Integer quarter) {
 		AltmanZScoreResult result = financialScoringService.calculateAltmanZScore(ticker, year, quarter);
 		return ResponseEntity.ok(ApiRes.success(result));
 	}

@@ -38,7 +38,7 @@ import java.util.Optional;
 
 @Service
 public class FinancialScoringServiceImpl implements FinancialScoringService {
-	private final Logger LOGGER = LoggerFactory.getLogger(FinancialScoringServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FinancialScoringServiceImpl.class);
 	
 	private final StockBalanceSheetRepository balanceSheetRepository;
 	private final StockIncomeStatementRepository incomeStatementRepository;
@@ -112,6 +112,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 		Double workingCapital = calculateWorkingCapital(balanceSheet);
 		Double totalAssets = balanceSheet.getAsset() != null ? balanceSheet.getAsset() : 0.0;
 		Double retainedEarnings = balanceSheet.getUnDistributedIncome() != null ? balanceSheet.getUnDistributedIncome() : 0.0;
+		// Note: Using operationProfit as proxy for EBIT (Earnings Before Interest and Taxes)
 		Double ebit = incomeStatement.getOperationProfit() != null ? incomeStatement.getOperationProfit() : 0.0;
 		Double totalLiabilities = balanceSheet.getDebt() != null ? balanceSheet.getDebt() : 0.0;
 		Double revenue = incomeStatement.getRevenue() != null ? incomeStatement.getRevenue() : 0.0;
@@ -182,10 +183,12 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 	}
 
 	private int calculateQualityOfEarnings(StockCashFlow cashFlow, StockIncomeStatement income) {
+		// Operating cash flow from operations (fromSale represents cash flow from sales/operations)
 		Double operatingCashFlow = cashFlow.getFromSale();
 		Double netIncome = income.getShareHolderIncome();
 		
-		if (operatingCashFlow != null && netIncome != null && netIncome > 0) {
+		// Quality of earnings: operating cash flow should exceed net income
+		if (operatingCashFlow != null && netIncome != null) {
 			return operatingCashFlow > netIncome ? 1 : 0;
 		}
 		return 0;
@@ -310,7 +313,7 @@ public class FinancialScoringServiceImpl implements FinancialScoringService {
 
 	private String getZScoreRiskAssessment(Double zScore, boolean hasMarketValue) {
 		if (!hasMarketValue) {
-			return "Unable to calculate accurate Z-Score (market value not available)";
+			return "Z-Score calculated without market value component - interpretation may be limited";
 		}
 		
 		if (zScore > 2.99) {

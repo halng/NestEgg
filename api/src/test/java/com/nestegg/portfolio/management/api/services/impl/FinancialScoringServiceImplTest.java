@@ -178,7 +178,10 @@ class FinancialScoringServiceImplTest {
 
 		// Assert
 		assertNotNull(result);
-		assertTrue(result.getTotalScore() <= 4); // Only profitability indicators without comparison
+		// Without previous period data, only 4 profitability indicators can be calculated
+		// (positive net income, positive operating cash flow, quality of earnings, and ROA change would be 0)
+		// The comparison-based criteria (5 out of 9) will score 0
+		assertTrue(result.getTotalScore() <= 4);
 	}
 
 	@Test
@@ -238,7 +241,7 @@ class FinancialScoringServiceImplTest {
 		assertNotNull(result);
 		assertNotNull(result.getZScore());
 		assertEquals(0.0, result.getMarketValueToLiabilities());
-		assertTrue(result.getRiskAssessment().contains("Unable to calculate"));
+		assertTrue(result.getRiskAssessment().contains("calculated without market value component"));
 	}
 
 	@Test
