@@ -236,4 +236,68 @@ class ScreenerServiceImplTest {
 			screenerService.updateScreener(validScreenerCreate, "invalid-id");
 		});
 	}
+
+	@Test
+	void createScreener_WithInvalidCriteriaFields_ShouldReturnBadRequest() {
+		// Arrange - Criterion with empty field
+		ScreenerCreate invalidScreener = new ScreenerCreate(
+				"Test Screener",
+				"Description",
+				"user-123",
+				List.of(new CriteriaDto("", "operator", "value"))
+		);
+
+		// Act
+		ApiRes response = screenerService.createScreener(invalidScreener);
+
+		// Assert
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		assertEquals(false, response.getBody().success());
+		assertTrue(response.getBody().message().contains("criterion fields"));
+		verify(screenerRepository, never()).save(any(Screener.class));
+	}
+
+	@Test
+	void updateScreener_WithDifferentUserId_ShouldReturnBadRequest() {
+		// Arrange
+		mockScreener.setIsActive(true);
+		mockScreener.setIsDeleted(false);
+		mockScreener.setUserId("user-123");
+
+		ScreenerCreate requestWithDifferentUser = new ScreenerCreate(
+				"Updated Name",
+				"Updated Description",
+				"user-456", // Different user attempting to take ownership
+				List.of(new CriteriaDto("field", "operator", "value"))
+		);
+
+		when(screenerRepository.findByIdAndIsDeletedFalse(anyString())).thenReturn(Optional.of(mockScreener));
+
+		// Act
+		ApiRes response = screenerService.updateScreener(requestWithDifferentUser, "test-id-123");
+
+		// Assert
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		assertEquals(false, response.getBody().success());
+		assertTrue(response.getBody().message().contains("ownership"));
+		verify(screenerRepository, never()).save(any(Screener.class));
+	}
+
+	@Test
+	void updateScreener_WithSameName_ShouldUpdateSuccessfully() {
+		// Arrange - Update with same name should work
+		mockScreener.setIsActive(true);
+		mockScreener.setIsDeleted(false);
+		mockScreener.setName("Value Stocks");
+		when(screenerRepository.findByIdAndIsDeletedFalse(anyString())).thenReturn(Optional.of(mockScreener));
+		when(screenerRepository.save(any(Screener.class))).thenReturn(mockScreener);
+
+		// Act
+		ApiRes response = screenerService.updateScreener(validScreenerCreate, "test-id-123");
+
+		// Assert
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertEquals(true, response.getBody().success());
+		verify(screenerRepository, times(1)).save(any(Screener.class));
+	}
 }

@@ -60,6 +60,16 @@ public class ScreenerServiceImpl implements ScreenerService {
 			return ApiRes.badRequest("Screener must have at least one criterion");
 		}
 
+		// Validate individual criteria fields
+		for (CriteriaDto criterion : req.criteria()) {
+			if (StringValidators.isNullOrEmpty(criterion.field()) ||
+				StringValidators.isNullOrEmpty(criterion.operator()) ||
+				StringValidators.isNullOrEmpty(criterion.value())) {
+				LOGGER.warn("Screener creation failed. Criterion has null or empty fields.");
+				return ApiRes.badRequest("All criterion fields (field, operator, value) must not be null or blank");
+			}
+		}
+
 		if (this.screenerRepository.existsByNameAndUserId(req.name(), req.userId())) {
 			LOGGER.warn("Screener creation failed. Screener with name {} already exists for user {}.", req.name(), req.userId());
 			return ApiRes.conflict("Screener with the same name already exists for this user");
@@ -107,21 +117,34 @@ public class ScreenerServiceImpl implements ScreenerService {
 			return ApiRes.badRequest("Screener name and userId must not be null or blank");
 		}
 
+		// Verify user ownership - prevent userId changes
+		if (!screener.getUserId().equals(req.userId())) {
+			LOGGER.warn("Update attempt rejected. Screener {} belongs to user {} but update requested by user {}",
+					id, screener.getUserId(), req.userId());
+			return ApiRes.badRequest("Cannot change screener ownership");
+		}
+
 		if (req.criteria() == null || req.criteria().isEmpty()) {
 			return ApiRes.badRequest("Screener must have at least one criterion");
 		}
 
-		// Check if name already exists for this user (excluding current screener)
-		boolean nameExists = screenerRepository.findByUserIdAndIsDeletedFalse(req.userId()).stream()
-				.anyMatch(s -> s.getName().equals(req.name()) && !s.getId().equals(id));
+		// Validate individual criteria fields
+		for (CriteriaDto criterion : req.criteria()) {
+			if (StringValidators.isNullOrEmpty(criterion.field()) ||
+				StringValidators.isNullOrEmpty(criterion.operator()) ||
+				StringValidators.isNullOrEmpty(criterion.value())) {
+				return ApiRes.badRequest("All criterion fields (field, operator, value) must not be null or blank");
+			}
+		}
 
-		if (nameExists) {
+		// Check if name already exists for this user (excluding current screener)
+		if (!screener.getName().equals(req.name()) &&
+			screenerRepository.existsByNameAndUserId(req.name(), req.userId())) {
 			return ApiRes.conflict("Screener with the same name already exists for this user");
 		}
 
 		screener.setName(req.name());
 		screener.setDescription(req.description());
-		screener.setUserId(req.userId());
 
 		// Clear existing criteria and add new ones
 		screener.getCriteria().clear();
