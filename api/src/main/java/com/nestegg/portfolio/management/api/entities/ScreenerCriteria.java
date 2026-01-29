@@ -21,6 +21,7 @@ import lombok.*;
 
 @Getter
 @Setter
+@ToString(exclude = "screener")
 @Entity
 @Builder
 @AllArgsConstructor
