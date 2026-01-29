@@ -26,7 +26,8 @@ import java.util.Optional;
 
 @Repository
 public interface WatchlistRepository extends JpaRepository<WatchlistEntry, String> {
-	boolean existsByTickerAndExchange(@NonNull String ticker, @NonNull String exchange);
+	boolean existsByTickerAndExchangeAndIsDeletedFalse(@NonNull String ticker, @NonNull String exchange);
+	Optional<WatchlistEntry> findByTickerAndExchangeAndIsDeletedFalse(@NonNull String ticker, @NonNull String exchange);
 	Optional<WatchlistEntry> findByTickerAndExchange(@NonNull String ticker, @NonNull String exchange);
 	List<WatchlistEntry> findAllByIsDeletedFalse();
 }

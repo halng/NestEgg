@@ -69,7 +69,8 @@ class WatchlistServiceTest {
 		savedEntry.setIsActive(true);
 		savedEntry.setIsDeleted(false);
 
-		when(watchlistRepository.existsByTickerAndExchange("AAPL", "NASDAQ")).thenReturn(false);
+		when(watchlistRepository.existsByTickerAndExchangeAndIsDeletedFalse("AAPL", "NASDAQ")).thenReturn(false);
+		when(watchlistRepository.findByTickerAndExchange("AAPL", "NASDAQ")).thenReturn(Optional.empty());
 		when(watchlistRepository.save(any(WatchlistEntry.class))).thenReturn(savedEntry);
 
 		// When
@@ -98,7 +99,7 @@ class WatchlistServiceTest {
 			.exchange("NASDAQ")
 			.build();
 
-		when(watchlistRepository.existsByTickerAndExchange("AAPL", "NASDAQ")).thenReturn(true);
+		when(watchlistRepository.existsByTickerAndExchangeAndIsDeletedFalse("AAPL", "NASDAQ")).thenReturn(true);
 
 		// When
 		ApiRes response = watchlistService.addToWatchlist(request);
@@ -111,6 +112,40 @@ class WatchlistServiceTest {
 		assertTrue(response.getBody().message().contains("already in the watchlist"));
 
 		verify(watchlistRepository, never()).save(any(WatchlistEntry.class));
+	}
+
+	@Test
+	void addToWatchlist_ReactivateDeletedEntry() {
+		// Given
+		WatchlistEntryCreate request = WatchlistEntryCreate.builder()
+			.ticker("AAPL")
+			.exchange("NASDAQ")
+			.build();
+
+		WatchlistEntry deletedEntry = WatchlistEntry.builder()
+			.id("test-id")
+			.ticker("AAPL")
+			.exchange("NASDAQ")
+			.snapshotTimestamp(Instant.now().minusSeconds(3600))
+			.build();
+		deletedEntry.setIsActive(false);
+		deletedEntry.setIsDeleted(true);
+
+		when(watchlistRepository.existsByTickerAndExchangeAndIsDeletedFalse("AAPL", "NASDAQ")).thenReturn(false);
+		when(watchlistRepository.findByTickerAndExchange("AAPL", "NASDAQ")).thenReturn(Optional.of(deletedEntry));
+		when(watchlistRepository.save(any(WatchlistEntry.class))).thenReturn(deletedEntry);
+
+		// When
+		ApiRes response = watchlistService.addToWatchlist(request);
+
+		// Then - Should reactivate the deleted entry
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		assertNotNull(response.getBody());
+		assertTrue(response.getBody().isSuccess());
+
+		verify(watchlistRepository, times(1)).save(argThat(entry ->
+			!entry.getIsDeleted() && entry.getIsActive() && entry.getTicker().equals("AAPL")
+		));
 	}
 
 	@Test

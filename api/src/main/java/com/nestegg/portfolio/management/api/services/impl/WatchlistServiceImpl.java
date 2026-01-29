@@ -45,13 +45,28 @@ public class WatchlistServiceImpl implements WatchlistService {
 	public ApiRes addToWatchlist(WatchlistEntryCreate req) {
 		log.info("Adding stock to watchlist: ticker={}, exchange={}", req.ticker(), req.exchange());
 
-		// AC-2: Check for duplicate
-		if (watchlistRepository.existsByTickerAndExchange(req.ticker(), req.exchange())) {
+		// AC-2: Check for duplicate active entry
+		if (watchlistRepository.existsByTickerAndExchangeAndIsDeletedFalse(req.ticker(), req.exchange())) {
 			log.warn("Stock already exists in watchlist: ticker={}, exchange={}", req.ticker(), req.exchange());
 			return ApiRes.conflict("Stock is already in the watchlist");
 		}
 
-		// AC-3: Create entry with ticker, exchange, and snapshot timestamp
+		// Check if there's a soft-deleted entry that can be reactivated
+		Optional<WatchlistEntry> deletedEntry = watchlistRepository.findByTickerAndExchange(req.ticker(), req.exchange());
+		if (deletedEntry.isPresent() && deletedEntry.get().getIsDeleted()) {
+			// Reactivate the existing entry
+			WatchlistEntry entry = deletedEntry.get();
+			entry.setIsDeleted(false);
+			entry.setIsActive(true);
+			entry.setSnapshotTimestamp(Instant.now()); // Update snapshot timestamp
+			WatchlistEntry savedEntry = watchlistRepository.save(entry);
+			log.info("Stock reactivated in watchlist: id={}", savedEntry.getId());
+
+			WatchlistEntryView view = convertToView(savedEntry);
+			return ApiRes.created("Stock added to watchlist successfully", view);
+		}
+
+		// AC-3: Create new entry with ticker, exchange, and snapshot timestamp
 		WatchlistEntry entry = WatchlistEntry.builder()
 			.ticker(req.ticker())
 			.exchange(req.exchange())

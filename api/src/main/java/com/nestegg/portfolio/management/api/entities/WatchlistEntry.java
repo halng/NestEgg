@@ -27,9 +27,7 @@ import java.time.Instant;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "watchlist_entries", uniqueConstraints = {
-	@UniqueConstraint(columnNames = {"ticker", "exchange"})
-})
+@Table(name = "watchlist_entries")
 public class WatchlistEntry extends AuditEntity {
 
 	@Id
