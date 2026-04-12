@@ -3,6 +3,7 @@ import { DataTable } from "@/components/DataTable"
 import { mockStocks } from "@/lib/mock-data"
 import { Button } from "@/components/ui/Button"
 import { Plus, BellRing } from "lucide-react"
+import { Suspense } from "react"
 
 export default function WatchlistPage() {
   // Take top 5 for watchlist mockup
@@ -52,7 +53,9 @@ export default function WatchlistPage() {
         </div>
 
         <div className="w-full">
-          <DataTable data={watchlist} />
+          <Suspense fallback={<div className="h-96 w-full animate-pulse bg-muted rounded-md" />}>
+            <DataTable data={watchlist} />
+          </Suspense>
         </div>
         
       </div>

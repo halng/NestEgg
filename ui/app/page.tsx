@@ -1,6 +1,7 @@
 import { FilterSidebar } from "@/components/FilterSidebar"
 import { DataTable } from "@/components/DataTable"
 import { mockStocks } from "@/lib/mock-data"
+import { Suspense } from "react"
 
 export default function ScreenerPage() {
   return (
@@ -21,7 +22,9 @@ export default function ScreenerPage() {
 
         {/* Data Table Wrapper */}
         <div className="w-full">
-          <DataTable data={mockStocks} />
+          <Suspense fallback={<div className="h-96 w-full animate-pulse bg-muted rounded-md" />}>
+            <DataTable data={mockStocks} />
+          </Suspense>
         </div>
       </div>
     </div>
