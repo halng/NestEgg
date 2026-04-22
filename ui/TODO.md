@@ -20,7 +20,7 @@
 - [ ] News and catalyst feed connected to each ticker and screener result set
 - [ ] Earnings, dividend, and corporate action calendar views
 - [ ] Sector and exchange heatmaps plus basic market breadth indicators
-- [ ] Ownership context for foreign room, insider transactions, and institutional activity where data is available
+- [ ] Ownership context for foreign ownership limits, insider transactions, and institutional activity where data is available
 
 ### Sharing and usability
 - [ ] Saved views and sharable screener URLs so users can reopen the same setup quickly
