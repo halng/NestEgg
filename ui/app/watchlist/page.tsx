@@ -4,13 +4,15 @@ import { mockStocks } from "@/lib/mock-data"
 import { Button } from "@/components/ui/Button"
 import { Plus, BellRing } from "lucide-react"
 import { Suspense } from "react"
+import { RequireAuth } from "@/components/auth/RequireAuth"
 
 export default function WatchlistPage() {
   // Take top 5 for watchlist mockup
   const watchlist = mockStocks.slice(0, 5)
 
   return (
-    <div className="p-4 md:p-8 bg-background min-h-full pb-24 md:pb-8">
+    <RequireAuth permission="viewWatchlist">
+      <div className="p-4 md:p-8 bg-background min-h-full pb-24 md:pb-8">
       <div className="max-w-6xl mx-auto space-y-6">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -59,6 +61,7 @@ export default function WatchlistPage() {
         </div>
         
       </div>
-    </div>
+      </div>
+    </RequireAuth>
   )
 }

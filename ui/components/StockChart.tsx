@@ -13,23 +13,26 @@ interface StockChartProps {
   ticker: string
 }
 
-export function StockChart({ data, ticker }: StockChartProps) {
-  // A dark theme customized tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="rounded-lg border border-border bg-card p-2 text-xs shadow-md">
-          <p className="font-semibold text-foreground mb-1">{label}</p>
-          <p className="text-primary text-[11px]">Price: {payload[0].value.toLocaleString()}</p>
-          {payload[1] && (
-             <p className="text-muted-foreground text-[11px]">Vol: {payload[1].value.toLocaleString()}</p>
-          )}
-        </div>
-      )
-    }
-    return null
-  }
 
+type TooltipPayload = { value: number }
+type ChartTooltipProps = { active?: boolean; payload?: TooltipPayload[]; label?: string }
+
+function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-2 text-xs shadow-md">
+        <p className="font-semibold text-foreground mb-1">{label}</p>
+        <p className="text-primary text-[11px]">Price: {payload[0].value.toLocaleString()}</p>
+        {payload[1] && (
+           <p className="text-muted-foreground text-[11px]">Vol: {payload[1].value.toLocaleString()}</p>
+        )}
+      </div>
+    )
+  }
+  return null
+}
+
+export function StockChart({ data, ticker }: StockChartProps) {
   return (
     <div className="w-full h-full min-h-[300px] flex flex-col">
       <div className="flex items-center justify-between mb-4">
@@ -63,7 +66,7 @@ export function StockChart({ data, ticker }: StockChartProps) {
               axisLine={false} 
               domain={[0, 'dataMax * 3']} // scale down volume visually
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#27272a', strokeWidth: 1 }} />
+            <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#27272a', strokeWidth: 1 }} />
             
             <Bar yAxisId="right" dataKey="volume" fill="#27272a" radius={[2, 2, 0, 0]} maxBarSize={20} />
             <Line 

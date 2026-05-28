@@ -20,7 +20,11 @@ import com.nestegg.portfolio.management.api.entities.StockFinancialRatio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface StockFinancialRatioRepository extends JpaRepository<StockFinancialRatio, Long> {
 	boolean existsByTicker(String ticker);
+
+	Optional<StockFinancialRatio> findTopByTickerOrderByYearDescQuarterDesc(String ticker);
 }

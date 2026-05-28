@@ -14,21 +14,10 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.repositories;
+package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.entities.StockOverview;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import com.nestegg.portfolio.management.api.dto.screener.StockScreenerResponse;
 
-import java.util.List;
-import java.util.Optional;
-
-@Repository
-public interface StockOverviewRepository extends CrudRepository<StockOverview, String> {
-
-	Optional<StockOverview> findBySymbol(String symbol);
-
-	boolean existsBySymbol(String symbol);
-
-	List<StockOverview> findAllByOrderBySymbolAsc();
+public interface StockScreenerService {
+	StockScreenerResponse getScreener(String query, String exchange, String sector, String signal);
 }
