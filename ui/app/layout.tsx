@@ -1,18 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { Navbar } from "@/components/shared/Navbar";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "VN Market Screener | Premium Stock Analysis",
@@ -26,10 +16,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body>
+        <AuthProvider>
+          <div className="flex min-h-screen bg-background text-foreground">
+            <Sidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Navbar />
+              <div className="min-h-0 flex-1">{children}</div>
+            </div>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

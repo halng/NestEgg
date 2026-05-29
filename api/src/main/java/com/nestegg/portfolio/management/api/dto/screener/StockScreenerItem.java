@@ -14,22 +14,30 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.repositories;
-
-import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+package com.nestegg.portfolio.management.api.dto.screener;
 
 import java.util.List;
-import java.util.Optional;
 
-@Repository
-public interface StockIncomeStatementRepository extends JpaRepository<StockIncomeStatement, Long> {
-	boolean existsByUniqueHash(String uniqueHash);
-
-	boolean existsByTicker(String symbol);
-
-	Optional<StockIncomeStatement> findTopByTickerOrderByYearDescQuarterDesc(String ticker);
-
-	List<StockIncomeStatement> findTop8ByTickerOrderByYearDescQuarterDesc(String ticker);
+public record StockScreenerItem(
+		String ticker,
+		String name,
+		Double price,
+		Double changePercent,
+		Long volume,
+		Double marketCap,
+		Double pe,
+		Double pb,
+		Double roe,
+		Double dividendYield,
+		Double revenueGrowth,
+		Double netMargin,
+		Double beta,
+		String analystRating,
+		String signal,
+		String sector,
+		String exchange,
+		String status,
+		Integer score,
+		List<ChartDataPoint> historicalData
+) {
 }
