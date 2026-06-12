@@ -14,14 +14,12 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.dto.trading;
+package com.nestegg.portfolio.management.api.viewmodels.trading;
 
-import java.util.List;
-
-public record RiskAssessment(
-		String riskLevel,
-		Integer riskScore,
-		Double suggestedStopLossPercent,
-		List<String> constraints
+public record PortfolioDecision(
+		String action,
+		Boolean approved,
+		Double targetWeightPercent,
+		String rationale
 ) {
 }

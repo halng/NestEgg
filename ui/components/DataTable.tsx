@@ -188,7 +188,7 @@ export function DataTable({ data }: DataTableProps) {
         )}
       </div>
 
-      <div className="xl:block">
+      <div className="hidden xl:block">
         {activeStock ? <StockInsight stock={activeStock} /> : null}
       </div>
     </div>

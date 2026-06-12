@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.dto.trading;
+package com.nestegg.portfolio.management.api.viewmodels.trading;
 
 public record ResearchDebate(
 		String bullishCase,

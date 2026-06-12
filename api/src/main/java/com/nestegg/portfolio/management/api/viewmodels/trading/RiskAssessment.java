@@ -14,15 +14,14 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.dto.trading;
+package com.nestegg.portfolio.management.api.viewmodels.trading;
 
 import java.util.List;
 
-public record AgentReport(
-		String role,
-		String stance,
-		Integer score,
-		String summary,
-		List<String> evidence
+public record RiskAssessment(
+		String riskLevel,
+		Integer riskScore,
+		Double suggestedStopLossPercent,
+		List<String> constraints
 ) {
 }

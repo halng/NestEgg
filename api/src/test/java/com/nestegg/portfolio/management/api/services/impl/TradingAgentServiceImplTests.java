@@ -16,7 +16,7 @@
 
 package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.dto.trading.TradingSuggestionResponse;
+import com.nestegg.portfolio.management.api.viewmodels.trading.TradingSuggestionResponse;
 import com.nestegg.portfolio.management.api.entities.StockFinancialRatio;
 import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
 import com.nestegg.portfolio.management.api.entities.StockOverview;
@@ -125,6 +125,39 @@ class TradingAgentServiceImplTests {
 		assertThat(suggestion.riskAssessment().constraints()).isNotEmpty();
 		assertThat(suggestion.portfolioDecision().rationale()).contains("Portfolio manager");
 		assertThat(suggestion.disclaimer()).contains("not financial, investment, or trading advice");
+	}
+
+	@Test
+	void suggestThrowsWhenTickerIsBlankBeforeRepositoryLookup() {
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> tradingAgentService.suggest("   "))
+				.withMessage("Ticker is required");
+	}
+
+	@Test
+	void suggestHandlesSparseFinancialDataWithNeutralDefaults() {
+		String ticker = "ABC";
+		when(stockOverviewRepository.findBySymbol(ticker)).thenReturn(Optional.of(StockOverview.builder()
+				.symbol(ticker)
+				.name("ABC Holdings")
+				.rating(null)
+				.deltaInWeek(null)
+				.deltaInMonth(null)
+				.deltaInYear(null)
+				.isActivelyTraded(false)
+				.industry(null)
+				.build()));
+		when(stockRatioRepository.findByTicker(ticker)).thenReturn(Optional.empty());
+		when(stockFinancialRatioRepository.findTopByTickerOrderByYearDescQuarterDesc(ticker)).thenReturn(Optional.empty());
+		when(stockIncomeStatementRepository.findTopByTickerOrderByYearDescQuarterDesc(ticker)).thenReturn(Optional.empty());
+		when(stockIncomeStatementRepository.findTop8ByTickerOrderByYearDescQuarterDesc(ticker)).thenReturn(List.of());
+
+		TradingSuggestionResponse suggestion = tradingAgentService.suggest("abc");
+
+		assertThat(suggestion.ticker()).isEqualTo(ticker);
+		assertThat(suggestion.conviction()).isBetween(0, 100);
+		assertThat(suggestion.keyRisks()).contains("Beta: 1.0", "Debt on equity: 0.0", "Absolute weekly move %: 0.0");
+		assertThat(suggestion.analystReports()).hasSize(4);
 	}
 
 	@Test

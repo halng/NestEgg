@@ -47,16 +47,16 @@ interface ApiResponse<T> {
   status: number
   message: string
   data: T
-  success: boolean
+  isSuccess: boolean
   timestamp: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:9009/api/v1/portfolio-management"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "/api/backend"
 
 export async function fetchTradingSuggestion(ticker: string, signal?: AbortSignal): Promise<TradingSuggestion> {
   const response = await fetch(`${API_BASE_URL}/agents/suggestions?ticker=${encodeURIComponent(ticker)}`, {
     headers: {
-      Accept: "application/json",
+      Accept: "text/event-stream",
     },
     signal,
   })
@@ -65,10 +65,31 @@ export async function fetchTradingSuggestion(ticker: string, signal?: AbortSigna
     throw new Error(`Unable to fetch trading suggestion for ${ticker}`)
   }
 
-  const payload = await response.json() as ApiResponse<TradingSuggestion>
-  if (!payload.success) {
-    throw new Error(payload.message || `Unable to fetch trading suggestion for ${ticker}`)
+  const responseText = await response.text()
+  const payload = parseSuggestionResponse(responseText)
+
+  if (isApiResponse(payload)) {
+    if (!payload.isSuccess) {
+      throw new Error(payload.message || `Unable to fetch trading suggestion for ${ticker}`)
+    }
+
+    return payload.data
   }
 
-  return payload.data
+  return payload
+}
+
+function parseSuggestionResponse(responseText: string): TradingSuggestion | ApiResponse<TradingSuggestion> {
+  const eventData = responseText
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.replace(/^data:\s?/, ""))
+    .join("\n")
+    .trim()
+
+  return JSON.parse(eventData || responseText) as TradingSuggestion | ApiResponse<TradingSuggestion>
+}
+
+function isApiResponse(payload: TradingSuggestion | ApiResponse<TradingSuggestion>): payload is ApiResponse<TradingSuggestion> {
+  return typeof (payload as ApiResponse<TradingSuggestion>).isSuccess === "boolean"
 }

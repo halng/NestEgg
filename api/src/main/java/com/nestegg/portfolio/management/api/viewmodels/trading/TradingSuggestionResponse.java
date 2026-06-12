@@ -14,12 +14,25 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.dto.trading;
+package com.nestegg.portfolio.management.api.viewmodels.trading;
 
-public record PortfolioDecision(
+import java.time.LocalDate;
+import java.util.List;
+
+public record TradingSuggestionResponse(
+		String ticker,
+		String name,
+		LocalDate analysisDate,
 		String action,
-		Boolean approved,
+		Integer conviction,
 		Double targetWeightPercent,
-		String rationale
+		String thesis,
+		List<String> keyRisks,
+		List<AgentReport> analystReports,
+		ResearchDebate researchDebate,
+		AgentReport traderReport,
+		RiskAssessment riskAssessment,
+		PortfolioDecision portfolioDecision,
+		String disclaimer
 ) {
 }

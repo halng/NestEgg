@@ -31,7 +31,7 @@ describe('DataTable Compare Interactions', () => {
   beforeEach(() => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true, data: mockAgentSuggestion }),
+      text: async () => `event: suggestion\ndata: ${JSON.stringify(mockAgentSuggestion)}\n\n`,
     }) as jest.Mock
   })
 
@@ -62,8 +62,8 @@ describe('DataTable Compare Interactions', () => {
     expect(screen.getAllByText('FPT has durable quality and improving momentum.')).not.toHaveLength(0)
     expect(screen.getAllByText('Fundamentals Analyst')).not.toHaveLength(0)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:9009/api/v1/portfolio-management/agents/suggestions?ticker=FPT',
-      expect.objectContaining({ headers: { Accept: 'application/json' } })
+      '/api/backend/agents/suggestions?ticker=FPT',
+      expect.objectContaining({ headers: { Accept: 'text/event-stream' } })
     )
   })
 

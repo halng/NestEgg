@@ -16,7 +16,7 @@
 
 package com.nestegg.portfolio.management.api.services;
 
-import com.nestegg.portfolio.management.api.dto.trading.TradingSuggestionResponse;
+import com.nestegg.portfolio.management.api.viewmodels.trading.TradingSuggestionResponse;
 
 public interface TradingAgentService {
 	TradingSuggestionResponse suggest(String ticker);
