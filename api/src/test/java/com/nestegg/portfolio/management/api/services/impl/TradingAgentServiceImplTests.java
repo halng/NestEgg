@@ -1,5 +1,5 @@
 /*
- *    Copyright 2025 Hao Nguyen Tan
+ *    Copyright 2026 Hao Nguyen Tan
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.agent;
+package com.nestegg.portfolio.management.api.services.impl;
 
-import com.nestegg.portfolio.management.api.agent.dto.TradingSuggestionResponse;
+import com.nestegg.portfolio.management.api.dto.trading.TradingSuggestionResponse;
 import com.nestegg.portfolio.management.api.entities.StockFinancialRatio;
 import com.nestegg.portfolio.management.api.entities.StockIncomeStatement;
 import com.nestegg.portfolio.management.api.entities.StockOverview;
@@ -26,6 +26,7 @@ import com.nestegg.portfolio.management.api.repositories.StockFinancialRatioRepo
 import com.nestegg.portfolio.management.api.repositories.StockIncomeStatementRepository;
 import com.nestegg.portfolio.management.api.repositories.StockOverviewRepository;
 import com.nestegg.portfolio.management.api.repositories.StockRatioRepository;
+import com.nestegg.portfolio.management.api.services.TradingAgentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

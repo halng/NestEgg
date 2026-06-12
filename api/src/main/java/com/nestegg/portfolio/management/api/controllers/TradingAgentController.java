@@ -1,5 +1,5 @@
 /*
- *    Copyright 2025 Hao Nguyen Tan
+ *    Copyright 2026 Hao Nguyen Tan
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,16 +14,17 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.agent;
+package com.nestegg.portfolio.management.api.controllers;
 
 import com.nestegg.portfolio.management.api.dto.ApiRes;
+import com.nestegg.portfolio.management.api.services.TradingAgentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/agent")
+@RequestMapping("/agents")
 public class TradingAgentController {
 	private final TradingAgentService tradingAgentService;
 
@@ -31,8 +32,8 @@ public class TradingAgentController {
 		this.tradingAgentService = tradingAgentService;
 	}
 
-	@GetMapping("/suggestion")
-	public ApiRes getSuggestion(@RequestParam String ticker) {
+	@GetMapping("/suggestions")
+	public ApiRes getSuggestions(@RequestParam String ticker) {
 		return ApiRes.ok("Trading suggestion generated successfully", tradingAgentService.suggest(ticker));
 	}
 }

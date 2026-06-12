@@ -54,7 +54,7 @@ interface ApiResponse<T> {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:9009/api/v1/portfolio-management"
 
 export async function fetchTradingSuggestion(ticker: string, signal?: AbortSignal): Promise<TradingSuggestion> {
-  const response = await fetch(`${API_BASE_URL}/agent/suggestion?ticker=${encodeURIComponent(ticker)}`, {
+  const response = await fetch(`${API_BASE_URL}/agents/suggestions?ticker=${encodeURIComponent(ticker)}`, {
     headers: {
       Accept: "application/json",
     },

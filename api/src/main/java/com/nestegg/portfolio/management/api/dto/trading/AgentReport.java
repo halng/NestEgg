@@ -1,5 +1,5 @@
 /*
- *    Copyright 2025 Hao Nguyen Tan
+ *    Copyright 2026 Hao Nguyen Tan
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.agent;
+package com.nestegg.portfolio.management.api.dto.trading;
 
-import com.nestegg.portfolio.management.api.agent.dto.TradingSuggestionResponse;
+import java.util.List;
 
-public interface TradingAgentService {
-	TradingSuggestionResponse suggest(String ticker);
+public record AgentReport(
+		String role,
+		String stance,
+		Integer score,
+		String summary,
+		List<String> evidence
+) {
 }

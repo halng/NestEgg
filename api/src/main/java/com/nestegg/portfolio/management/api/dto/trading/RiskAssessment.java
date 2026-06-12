@@ -1,5 +1,5 @@
 /*
- *    Copyright 2025 Hao Nguyen Tan
+ *    Copyright 2026 Hao Nguyen Tan
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,12 +14,14 @@
  *    limitations under the License.
  */
 
-package com.nestegg.portfolio.management.api.agent.dto;
+package com.nestegg.portfolio.management.api.dto.trading;
 
-public record PortfolioDecision(
-		String action,
-		Boolean approved,
-		Double targetWeightPercent,
-		String rationale
+import java.util.List;
+
+public record RiskAssessment(
+		String riskLevel,
+		Integer riskScore,
+		Double suggestedStopLossPercent,
+		List<String> constraints
 ) {
 }

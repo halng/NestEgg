@@ -62,7 +62,7 @@ describe('DataTable Compare Interactions', () => {
     expect(screen.getAllByText('FPT has durable quality and improving momentum.')).not.toHaveLength(0)
     expect(screen.getAllByText('Fundamentals Analyst')).not.toHaveLength(0)
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:9009/api/v1/portfolio-management/agent/suggestion?ticker=FPT',
+      'http://localhost:9009/api/v1/portfolio-management/agents/suggestions?ticker=FPT',
       expect.objectContaining({ headers: { Accept: 'application/json' } })
     )
   })
