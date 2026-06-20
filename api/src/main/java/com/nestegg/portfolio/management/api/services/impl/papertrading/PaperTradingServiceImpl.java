@@ -23,6 +23,9 @@ import java.util.Locale;
 @Service
 public class PaperTradingServiceImpl implements PaperTradingService {
 	private static final BigDecimal STARTING_CAPITAL = new BigDecimal("100000000");
+	private static final String BUY_SIDE = "BUY";
+	private static final String SELL_SIDE = "SELL";
+
 	private final PaperTradingAccountRepository accountRepository;
 	private final PaperTradingHoldingRepository holdingRepository;
 	private final PaperTradingLedgerEntryRepository ledgerRepository;
@@ -46,37 +49,44 @@ public class PaperTradingServiceImpl implements PaperTradingService {
 	public PaperTradingSession placeOrder(String userId, PaperTradingOrderRequest request) {
 		PaperTradingAccount account = getOrCreateAccount(userId);
 		String ticker = request.ticker().trim().toUpperCase(Locale.ROOT);
+		String side = request.side().trim().toUpperCase(Locale.ROOT);
 		BigDecimal price = priceFor(ticker);
 		BigDecimal total = price.multiply(BigDecimal.valueOf(request.shares()));
 
-		if ("BUY".equals(request.side()) && account.getCashBalance().compareTo(total) < 0) {
+		if (BUY_SIDE.equals(side) && account.getCashBalance().compareTo(total) < 0) {
 			throw new IllegalArgumentException("Insufficient Virtual Funds");
 		}
 
 		PaperTradingHolding holding = holdingRepository.findByAccountAndTicker(account, ticker).orElse(null);
-		if ("SELL".equals(request.side()) && (holding == null || holding.getShares() < request.shares())) {
+		if (SELL_SIDE.equals(side) && (holding == null || holding.getShares() < request.shares())) {
 			throw new IllegalArgumentException("Insufficient Shares");
 		}
 
-		if ("BUY".equals(request.side())) {
+		applyOrderAndPersist(account, holding, ticker, price, total, request.shares(), side);
+		return toSession(account, mentorMessage(account));
+	}
+
+	private void applyOrderAndPersist(PaperTradingAccount account, PaperTradingHolding holding, String ticker, BigDecimal price, BigDecimal total, long shares, String side) {
+		if (BUY_SIDE.equals(side)) {
 			if (holding == null) {
-				holding = PaperTradingHolding.builder().account(account).ticker(ticker).shares(request.shares()).averageCost(price).build();
+				holding = PaperTradingHolding.builder().account(account).ticker(ticker).shares(shares).averageCost(price).build();
 			} else {
 				BigDecimal currentCost = holding.getAverageCost().multiply(BigDecimal.valueOf(holding.getShares()));
-				holding.setAverageCost(currentCost.add(total).divide(BigDecimal.valueOf(holding.getShares() + request.shares()), 2, RoundingMode.HALF_UP));
-				holding.setShares(holding.getShares() + request.shares());
+				holding.setAverageCost(currentCost.add(total).divide(BigDecimal.valueOf(holding.getShares() + shares), 2, RoundingMode.HALF_UP));
+				holding.setShares(holding.getShares() + shares);
 			}
 			account.setCashBalance(account.getCashBalance().subtract(total));
 			holdingRepository.save(holding);
-		} else {
-			holding.setShares(holding.getShares() - request.shares());
+		} else if (SELL_SIDE.equals(side)) {
+			holding.setShares(holding.getShares() - shares);
 			account.setCashBalance(account.getCashBalance().add(total));
 			if (holding.getShares() == 0) holdingRepository.delete(holding); else holdingRepository.save(holding);
+		} else {
+			throw new IllegalArgumentException("Unsupported order side");
 		}
 
-		ledgerRepository.save(PaperTradingLedgerEntry.builder().account(account).side(request.side()).ticker(ticker).shares(request.shares()).price(price).total(total).executedAt(Instant.now()).build());
+		ledgerRepository.save(PaperTradingLedgerEntry.builder().account(account).side(side).ticker(ticker).shares(shares).price(price).total(total).executedAt(Instant.now()).build());
 		accountRepository.save(account);
-		return toSession(account, mentorMessage(account));
 	}
 
 	@Override

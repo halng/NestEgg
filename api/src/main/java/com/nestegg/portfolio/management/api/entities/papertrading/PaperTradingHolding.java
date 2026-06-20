@@ -22,7 +22,7 @@ public class PaperTradingHolding extends AuditEntity {
 	@JoinColumn(name = "account_id", nullable = false)
 	private PaperTradingAccount account;
 
-	@Column(nullable = false, length = 20)
+	@Column(nullable = false, length = 4)
 	private String ticker;
 
 	@Column(nullable = false)

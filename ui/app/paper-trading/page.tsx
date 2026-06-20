@@ -7,8 +7,8 @@ import { fetchPaperTradingSession, placePaperTradingOrder, resetPaperTradingAcco
 import { Activity, AlertTriangle, Bot, History, LineChart, RefreshCcw, ShieldCheck, Sparkles, TrendingUp, Wallet } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-const currency = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 })
-const number = new Intl.NumberFormat("vi-VN")
+const DEFAULT_LOCALE = process.env.NEXT_PUBLIC_PAPER_TRADING_LOCALE || "vi-VN"
+const DEFAULT_CURRENCY = process.env.NEXT_PUBLIC_PAPER_TRADING_CURRENCY || "VND"
 
 export default function PaperTradingPage() {
   return (
@@ -40,6 +40,9 @@ function PaperTradingWorkspace() {
   }, [user])
 
   const selectedStock = useMemo(() => session?.marketWatch.find((stock) => stock.ticker === selectedTicker) ?? session?.marketWatch[0], [selectedTicker, session])
+  const formatLocale = DEFAULT_LOCALE
+  const currency = useMemo(() => new Intl.NumberFormat(formatLocale, { style: "currency", currency: DEFAULT_CURRENCY, maximumFractionDigits: 0 }), [formatLocale])
+  const number = useMemo(() => new Intl.NumberFormat(formatLocale), [formatLocale])
   const orderValue = (selectedStock?.price ?? 0) * quantity
 
   const refreshSession = (nextSession: PaperTradingSession) => {
@@ -95,7 +98,7 @@ function PaperTradingWorkspace() {
           <div className="rounded-3xl border border-border bg-card/70 p-4">
             <h2 className="text-xl font-bold">Market Watch</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {(session?.marketWatch ?? []).slice(0, 8).map((stock) => <MarketCard key={stock.ticker} stock={stock} active={stock.ticker === selectedTicker} onTrade={() => setSelectedTicker(stock.ticker)} />)}
+              {(session?.marketWatch ?? []).slice(0, 8).map((stock) => <MarketCard key={stock.ticker} stock={stock} active={stock.ticker === selectedTicker} onTrade={() => setSelectedTicker(stock.ticker)} currencyFormatter={currency} />)}
             </div>
           </div>
 
@@ -126,7 +129,7 @@ function PaperTradingWorkspace() {
 
           <div className="rounded-3xl border border-border bg-card/70 p-4">
             <div className="flex items-center gap-2"><History className="h-5 w-5 text-primary" /><h2 className="text-xl font-bold">Transaction Ledger</h2></div>
-            <div className="mt-4 space-y-3">{(session?.ledger ?? []).slice(0, 6).map((entry) => <div key={entry.id} className="rounded-2xl bg-background/70 p-3 ring-1 ring-border"><div className="flex items-center justify-between"><span className={entry.side === "BUY" ? "font-bold text-success" : "font-bold text-danger"}>{entry.side} {entry.ticker}</span><span className="text-xs text-muted-foreground">{new Date(entry.executedAt).toLocaleString("vi-VN")}</span></div><p className="mt-1 text-sm text-muted-foreground">{number.format(entry.shares)} shares @ {currency.format(entry.price)} · {currency.format(entry.total)}</p></div>)}{session?.ledger.length === 0 && <p className="text-sm text-muted-foreground">No ledger entries yet. Trades will persist here after execution.</p>}</div>
+            <div className="mt-4 space-y-3">{(session?.ledger ?? []).slice(0, 6).map((entry) => <div key={entry.id} className="rounded-2xl bg-background/70 p-3 ring-1 ring-border"><div className="flex items-center justify-between"><span className={entry.side === "BUY" ? "font-bold text-success" : "font-bold text-danger"}>{entry.side} {entry.ticker}</span><span className="text-xs text-muted-foreground">{new Date(entry.executedAt).toLocaleString(formatLocale)}</span></div><p className="mt-1 text-sm text-muted-foreground">{number.format(entry.shares)} shares @ {currency.format(entry.price)} · {currency.format(entry.total)}</p></div>)}{session?.ledger.length === 0 && <p className="text-sm text-muted-foreground">No ledger entries yet. Trades will persist here after execution.</p>}</div>
           </div>
         </section>
 
@@ -144,8 +147,8 @@ function Metric({ icon: Icon, label, value, tone = "text-foreground" }: { icon: 
   return <div className="rounded-2xl border border-border bg-background/60 p-4"><div className="mb-3 flex items-center justify-between text-muted-foreground"><span className="text-xs uppercase tracking-wider">{label}</span><Icon className="h-4 w-4" /></div><p className={`text-2xl font-black ${tone}`}>{value}</p></div>
 }
 
-function MarketCard({ stock, active, onTrade }: { stock: PaperTradingMarketTicker; active: boolean; onTrade: () => void }) {
-  return <button onClick={onTrade} className={`rounded-2xl border p-4 text-left transition ${active ? "border-primary bg-primary/10" : "border-border bg-background/60 hover:border-primary/50"}`}><div className="flex items-start justify-between"><div><p className="text-lg font-black">{stock.ticker}</p><p className="text-xs text-muted-foreground">{stock.exchange ?? "VN"} · {stock.sector ?? "Unknown"}</p></div><span className={stock.changePercent >= 0 ? "text-sm font-bold text-success" : "text-sm font-bold text-danger"}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span></div><div className="mt-4 flex items-end justify-between"><p className="font-mono font-bold">{currency.format(stock.price)}</p><span className="text-xs text-primary">Trade</span></div></button>
+function MarketCard({ stock, active, onTrade, currencyFormatter }: { stock: PaperTradingMarketTicker; active: boolean; onTrade: () => void; currencyFormatter: Intl.NumberFormat }) {
+  return <button onClick={onTrade} className={`rounded-2xl border p-4 text-left transition ${active ? "border-primary bg-primary/10" : "border-border bg-background/60 hover:border-primary/50"}`}><div className="flex items-start justify-between"><div><p className="text-lg font-black">{stock.ticker}</p><p className="text-xs text-muted-foreground">{stock.exchange ?? "VN"} · {stock.sector ?? "Unknown"}</p></div><span className={stock.changePercent >= 0 ? "text-sm font-bold text-success" : "text-sm font-bold text-danger"}>{stock.changePercent >= 0 ? "+" : ""}{stock.changePercent.toFixed(1)}%</span></div><div className="mt-4 flex items-end justify-between"><p className="font-mono font-bold">{currencyFormatter.format(stock.price)}</p><span className="text-xs text-primary">Trade</span></div></button>
 }
 
 function Feature({ icon: Icon, title, text }: { icon: typeof ShieldCheck; title: string; text: string }) {
