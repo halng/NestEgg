@@ -2,7 +2,7 @@
 import type * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Bookmark, Crown, LogOut, Search, User } from "lucide-react"
+import { Bookmark, Crown, LogOut, Search, TrendingUp, User } from "lucide-react"
 import { useState } from "react"
 import { useAuth } from "@/components/auth/AuthProvider"
 
@@ -34,6 +34,7 @@ export function Navbar() {
             <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
               <Link href="/" className={"transition-colors hover:text-primary " + (pathname === "/" ? "text-primary" : "text-muted-foreground")}>Screener</Link>
               <Link href="/watchlist" className={"transition-colors hover:text-primary " + (pathname === "/watchlist" ? "text-primary" : "text-muted-foreground")}>Watchlist</Link>
+              <Link href="/paper-trading" className={"transition-colors hover:text-primary " + (pathname === "/paper-trading" ? "text-primary" : "text-muted-foreground")}>Paper Trading</Link>
               <Link href="/subscription" className={"transition-colors hover:text-primary " + (pathname === "/subscription" ? "text-primary" : "text-muted-foreground")}>Subscription</Link>
               <Link href="/profile" className={"transition-colors hover:text-primary " + (pathname === "/profile" ? "text-primary" : "text-muted-foreground")}>Profile</Link>
             </nav>
@@ -55,6 +56,9 @@ export function Navbar() {
             <div className="flex items-center space-x-3">
               <Link href="/watchlist" className="p-2 text-muted-foreground transition-colors hover:text-foreground md:hidden">
                 <Bookmark className="h-5 w-5" />
+              </Link>
+              <Link href="/paper-trading" className="p-2 text-muted-foreground transition-colors hover:text-foreground md:hidden" aria-label="Paper trading">
+                <TrendingUp className="h-5 w-5" />
               </Link>
 
               {isAuthenticated && user ? (
