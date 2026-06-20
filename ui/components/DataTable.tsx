@@ -6,7 +6,9 @@ import { StockChart } from "@/components/StockChart"
 import { Checkbox } from "@/components/ui/Checkbox"
 import { Button } from "@/components/ui/Button"
 import { mockChartDataMap, type Stock } from "@/lib/mock-data"
-import { ArrowDown, ArrowUp, BarChart3, ChevronDown, LineChart, Minus, SearchX, ShieldCheck, Sparkles, Star } from "lucide-react"
+import { fetchTradingSuggestion, type TradingSuggestion } from "@/lib/agent-api"
+import { buildMockTradingSuggestion } from "@/lib/mock-agent-data"
+import { ArrowDown, ArrowUp, BarChart3, BrainCircuit, ChevronDown, LineChart, Loader2, Minus, SearchX, ShieldCheck, Sparkles, Star } from "lucide-react"
 import { useSearchParams, useRouter } from "next/navigation"
 
 interface DataTableProps {
@@ -65,7 +67,7 @@ export function DataTable({ data }: DataTableProps) {
   }
 
   return (
-    <div className="grid w-full gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="grid w-full gap-4 xl:grid-cols-[minmax(0,1fr)_360px]" data-testid="stock-data-table">
       <div className="relative min-w-0 pb-16">
         <div className="mb-3 flex flex-col gap-3 rounded-2xl border border-border bg-card/80 p-3 shadow-2xl shadow-black/10 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -194,6 +196,37 @@ export function DataTable({ data }: DataTableProps) {
 }
 
 function StockInsight({ stock }: { stock: Stock }) {
+  const [agentState, setAgentState] = React.useState<{ ticker: string; suggestion: TradingSuggestion | null; isLoading: boolean; error: string | null }>({
+    ticker: stock.ticker,
+    suggestion: null,
+    isLoading: true,
+    error: null,
+  })
+
+  if (agentState.ticker !== stock.ticker) {
+    setAgentState({ ticker: stock.ticker, suggestion: null, isLoading: true, error: null })
+  }
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+
+    fetchTradingSuggestion(stock.ticker, controller.signal)
+      .then((suggestion) => {
+        if (!controller.signal.aborted) setAgentState({ ticker: stock.ticker, suggestion, isLoading: false, error: null })
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        setAgentState({
+          ticker: stock.ticker,
+          suggestion: buildMockTradingSuggestion(stock),
+          isLoading: false,
+          error: error instanceof Error ? error.message : "Using local agent preview",
+        })
+      })
+
+    return () => controller.abort()
+  }, [stock])
+
   const metrics = [
     ["P/B", stock.pb.toFixed(1) + "x"],
     ["Dividend", stock.dividendYield.toFixed(1) + "%"],
@@ -235,12 +268,79 @@ function StockInsight({ stock }: { stock: Stock }) {
             <p className="mt-1 text-xs leading-5 text-muted-foreground">{stock.signal} profile with {stock.roe.toFixed(1)}% ROE, {stock.revenueGrowth.toFixed(1)}% revenue growth, and {formatCompact(stock.volume)} shares traded.</p>
           </div>
         </div>
+
+        <AgentSuggestionCard suggestion={agentState.suggestion} isLoading={agentState.isLoading} error={agentState.error} />
+
         <div className="grid grid-cols-3 gap-2">
           <Button variant="outline" size="sm" className="rounded-full"><Star className="h-4 w-4" /> Save</Button>
           <Button variant="outline" size="sm" className="rounded-full"><ShieldCheck className="h-4 w-4" /> Alert</Button>
           <Button size="sm" className="rounded-full"><BarChart3 className="h-4 w-4" /> Deep dive</Button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AgentSuggestionCard({ suggestion, isLoading, error }: { suggestion: TradingSuggestion | null; isLoading: boolean; error: string | null }) {
+  if (isLoading && !suggestion) {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+        Asking NestEgg agents for a trading suggestion…
+      </div>
+    )
+  }
+
+  if (!suggestion) {
+    return (
+      <div className="rounded-2xl border border-border bg-background/70 p-3 text-xs text-muted-foreground">
+        Agent suggestion is unavailable for this ticker.
+      </div>
+    )
+  }
+
+  const topReports = suggestion.analystReports.slice(0, 2)
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3" data-testid="agent-suggestion-card">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <BrainCircuit className="mt-0.5 h-4 w-4 text-primary" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">TradingAgents suggestion</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{suggestion.thesis}</p>
+          </div>
+        </div>
+        <Badge variant={suggestion.action === "BUY" || suggestion.action === "ACCUMULATE" ? "success" : suggestion.action === "SELL" || suggestion.action === "REDUCE" ? "danger" : "secondary"} className="rounded-full">
+          {suggestion.action}
+        </Badge>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-xl bg-background/70 p-2 ring-1 ring-border/70">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Conviction</div>
+          <div className="mt-1 font-bold text-primary">{suggestion.conviction}</div>
+        </div>
+        <div className="rounded-xl bg-background/70 p-2 ring-1 ring-border/70">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Risk</div>
+          <div className="mt-1 font-bold text-foreground">{suggestion.riskAssessment.riskLevel}</div>
+        </div>
+        <div className="rounded-xl bg-background/70 p-2 ring-1 ring-border/70">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Target</div>
+          <div className="mt-1 font-bold text-foreground">{suggestion.targetWeightPercent}%</div>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-2">
+        {topReports.map((report) => (
+          <div key={report.role} className="flex items-center justify-between gap-3 rounded-xl bg-background/60 px-3 py-2 text-xs">
+            <span className="font-medium text-foreground">{report.role}</span>
+            <span className="text-muted-foreground">{report.stance} · {report.score}</span>
+          </div>
+        ))}
+      </div>
+
+      {error ? <p className="mt-3 text-[11px] text-muted-foreground">Live API unavailable; showing local preview.</p> : null}
     </div>
   )
 }

@@ -1,0 +1,92 @@
+import type { Stock } from "@/lib/mock-data"
+import type { TradingSuggestion } from "@/lib/agent-api"
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+
+const actionFor = (score: number) => {
+  if (score >= 85) return "BUY"
+  if (score >= 70) return "ACCUMULATE"
+  if (score >= 55) return "HOLD"
+  if (score >= 40) return "REDUCE"
+  return "SELL"
+}
+
+export function buildMockTradingSuggestion(stock: Stock): TradingSuggestion {
+  const fundamentalsScore = clamp(Math.round(45 + stock.roe * 0.8 + stock.revenueGrowth * 0.5 - Math.max(0, stock.pe - 18) * 1.2), 0, 100)
+  const technicalScore = clamp(Math.round(50 + stock.changePercent * 4 + (stock.volume > 5_000_000 ? 8 : 0) - Math.max(0, stock.beta - 1.2) * 15), 0, 100)
+  const sentimentScore = clamp(Math.round(stock.score * 0.85 + (stock.analystRating === "Strong Buy" ? 10 : stock.analystRating === "Buy" ? 4 : 0)), 0, 100)
+  const macroScore = clamp(Math.round(52 + stock.revenueGrowth * 0.35 + (stock.sector === "Technology" ? 5 : stock.sector === "Energy" ? -3 : 0)), 0, 100)
+  const conviction = clamp(Math.round(fundamentalsScore * 0.4 + technicalScore * 0.25 + sentimentScore * 0.2 + macroScore * 0.15), 0, 100)
+  const riskScore = clamp(Math.round(35 + stock.beta * 18 + Math.abs(stock.changePercent) * 2 - (stock.volume > 5_000_000 ? 6 : 0)), 0, 100)
+  const action = actionFor(conviction - Math.max(0, riskScore - 65) / 2)
+
+  return {
+    ticker: stock.ticker,
+    name: stock.name,
+    analysisDate: "2026-05-29",
+    action,
+    conviction,
+    targetWeightPercent: action === "BUY" ? 8 : action === "ACCUMULATE" ? 5 : action === "HOLD" ? 0 : action === "REDUCE" ? -4 : -8,
+    thesis: `${stock.ticker} combines a ${stock.signal.toLowerCase()} profile, ${stock.roe.toFixed(1)}% ROE, and ${stock.revenueGrowth.toFixed(1)}% revenue growth with ${stock.changePercent.toFixed(1)}% latest momentum.`,
+    keyRisks: [
+      `Beta: ${stock.beta.toFixed(2)}`,
+      `Latest change: ${stock.changePercent.toFixed(1)}%`,
+      `Liquidity: ${Intl.NumberFormat("en", { notation: "compact" }).format(stock.volume)} shares`,
+    ],
+    analystReports: [
+      {
+        role: "Fundamentals Analyst",
+        stance: fundamentalsScore >= 60 ? "Bullish" : "Neutral",
+        score: fundamentalsScore,
+        summary: "Evaluates valuation, profitability, and growth quality.",
+        evidence: [`P/E: ${stock.pe.toFixed(1)}`, `ROE: ${stock.roe.toFixed(1)}%`, `Revenue growth: ${stock.revenueGrowth.toFixed(1)}%`],
+      },
+      {
+        role: "Technical Analyst",
+        stance: technicalScore >= 60 ? "Bullish" : technicalScore >= 45 ? "Neutral" : "Bearish",
+        score: technicalScore,
+        summary: "Reviews momentum, liquidity, and beta overlays.",
+        evidence: [`Change: ${stock.changePercent.toFixed(1)}%`, `Volume: ${stock.volume.toLocaleString()}`, `Beta: ${stock.beta.toFixed(2)}`],
+      },
+      {
+        role: "Sentiment Analyst",
+        stance: sentimentScore >= 60 ? "Bullish" : "Neutral",
+        score: sentimentScore,
+        summary: "Uses analyst rating and score as a sentiment proxy.",
+        evidence: [`Analyst rating: ${stock.analystRating}`, `NestEgg score: ${stock.score}`],
+      },
+      {
+        role: "News and Macro Analyst",
+        stance: macroScore >= 60 ? "Bullish" : "Neutral",
+        score: macroScore,
+        summary: "Approximates sector pressure and recent reported growth.",
+        evidence: [`Sector: ${stock.sector}`, `Exchange: ${stock.exchange}`],
+      },
+    ],
+    researchDebate: {
+      bullishCase: `${stock.signal} setup with ${stock.roe.toFixed(1)}% ROE supports upside if liquidity remains healthy.`,
+      bearishCase: `A beta of ${stock.beta.toFixed(2)} and ${stock.pe.toFixed(1)}x P/E require disciplined sizing.`,
+      synthesis: `${stock.ticker} should be sized only after balancing growth, valuation, momentum, and sector risk.`,
+    },
+    traderReport: {
+      role: "Trader Agent",
+      stance: conviction >= 70 ? "Bullish" : conviction >= 50 ? "Neutral" : "Bearish",
+      score: conviction,
+      summary: "Converts analyst consensus into a trade-intent score.",
+      evidence: [`Consensus score: ${conviction}`, `Signal: ${stock.signal}`],
+    },
+    riskAssessment: {
+      riskLevel: riskScore >= 75 ? "High" : riskScore >= 50 ? "Moderate" : "Low",
+      riskScore,
+      suggestedStopLossPercent: Math.round((8 + riskScore / 10) * 10) / 10,
+      constraints: [`Beta: ${stock.beta.toFixed(2)}`, `Absolute latest move: ${Math.abs(stock.changePercent).toFixed(1)}%`],
+    },
+    portfolioDecision: {
+      action,
+      approved: action !== "SELL",
+      targetWeightPercent: action === "BUY" ? 8 : action === "ACCUMULATE" ? 5 : action === "HOLD" ? 0 : action === "REDUCE" ? -4 : -8,
+      rationale: `Portfolio manager maps ${conviction} conviction and ${riskScore} risk into ${action}.`,
+    },
+    disclaimer: "Generated by deterministic NestEgg analysis agents for research and education only; this is not financial, investment, or trading advice.",
+  }
+}
