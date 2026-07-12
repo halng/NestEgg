@@ -89,6 +89,19 @@ export interface PriceAlert {
   createdAt: string
 }
 
+// Journal entry interface
+export interface JournalEntry {
+  id: string
+  orderId?: string
+  ticker?: string
+  title: string
+  content: string
+  tags: string[]
+  mood: 'bullish' | 'bearish' | 'neutral'
+  createdAt: string
+  updatedAt?: string
+}
+
 // Re-export existing types from paper-trading-api.ts for convenience
 export type {
   PaperTradingMarketTicker,

@@ -8,6 +8,7 @@ import { QuantityInput } from "./QuantityInput"
 import { PriceInput } from "./PriceInput"
 import { TimeInForceSelect } from "./TimeInForceSelect"
 import { OrderConfirmDialog } from "./OrderConfirmDialog"
+import { TrailingStopPreview } from "./TrailingStopPreview"
 import {
   OrderType,
   TimeInForce,
@@ -43,6 +44,7 @@ export function TradeTicket({
   const [limitPrice, setLimitPrice] = useState<number | undefined>()
   const [stopPrice, setStopPrice] = useState<number | undefined>()
   const [timeInForce, setTimeInForce] = useState<TimeInForce>("DAY")
+  const [trailPercent, setTrailPercent] = useState<number>(5)
 
   // UI state
   const [confirmSide, setConfirmSide] = useState<"BUY" | "SELL" | null>(null)
@@ -75,6 +77,7 @@ export function TradeTicket({
     shares,
     limitPrice: orderType !== "MARKET" ? limitPrice : undefined,
     stopPrice: orderType === "STOP" || orderType === "STOP_LIMIT" ? stopPrice : undefined,
+    trailPercent: orderType === "TRAILING_STOP" ? trailPercent : undefined,
     timeInForce,
   })
 
@@ -122,9 +125,10 @@ export function TradeTicket({
     }
   }
 
-  // Show needs limit/stop price
+  // Show needs limit/stop price/trailing stop
   const showLimitPrice = orderType === "LIMIT" || orderType === "STOP_LIMIT"
   const showStopPrice = orderType === "STOP" || orderType === "STOP_LIMIT"
+  const showTrailingStop = orderType === "TRAILING_STOP"
 
   return (
     <>
@@ -234,6 +238,39 @@ export function TradeTicket({
               placeholder={selectedStock ? Math.round(selectedStock.price * 0.95).toString() : "0"}
               disabled={disabled}
             />
+          )}
+
+          {/* Trailing Stop (conditional) */}
+          {showTrailingStop && (
+            <>
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <label className="text-sm text-muted-foreground">Trail Percentage</label>
+                  <span className="text-sm font-semibold">{trailPercent}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  step={0.5}
+                  value={trailPercent}
+                  onChange={(e) => setTrailPercent(parseFloat(e.target.value))}
+                  className="w-full accent-primary"
+                  disabled={disabled}
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>1%</span>
+                  <span>20%</span>
+                </div>
+              </div>
+              {selectedStock && (
+                <TrailingStopPreview
+                  currentPrice={selectedStock.price}
+                  trailPercent={trailPercent}
+                  side="SELL"
+                />
+              )}
+            </>
           )}
 
           {/* Time in Force (for non-market orders) */}
