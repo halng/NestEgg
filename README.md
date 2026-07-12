@@ -123,3 +123,37 @@ The current focus is on stabilizing the core financial domain model and ensuring
 
 NestEgg exists to make financial data understandable, trustworthy, and genuinely useful.
 
+
+Phase 1: Core Trading - Limit/stop orders, order history, order management
+Phase 2: Analytics - Portfolio charts, performance metrics, trade journal, export
+Phase 3: UX Polish - Mobile responsiveness, onboarding, price alerts, dark mode
+Phase 4: Social/Educational - Tutorials, leaderboard, achievements, competitions
+
+
+## How to
+
+### Test
+
+Run unit test
+
+```sh
+pnpm run test
+```
+
+Run component test
+```sh
+
+# Make sure system has need libraries & dependencies -> https://on.cypress.io/required-dependencies
+sudo apt-get install libgtk-3-0t64 libgbm-dev libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth xvfb
+
+# Install cypress
+./node_modules/.bin/cypress install
+
+# Start app
+
+p run dev
+
+# then start e2e
+p run e2e
+
+```
