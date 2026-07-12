@@ -39,3 +39,30 @@ export { ThemeToggle, ThemeToggleCompact } from './ThemeToggle'
 
 // Dividend Components
 export { DividendCalendar } from './DividendCalendar'
+
+// Portfolio Management Components
+export { PortfolioSwitcher, PortfolioCompareCard } from './PortfolioSwitcher'
+export { CreatePortfolioDialog, DeletePortfolioDialog } from './CreatePortfolioDialog'
+
+// Backtesting Components
+export { BacktestForm } from './BacktestForm'
+export { BacktestResults } from './BacktestResults'
+
+// Educational Components
+export { OnboardingTour, StartTourButton } from './OnboardingTour'
+export { TourStep } from './TourStep'
+export { RiskQuiz, RiskQuizTrigger } from './RiskQuiz'
+export { GlossaryTooltip, GlossaryHighlight } from './GlossaryTooltip'
+
+// Social Components
+export { LeaderboardTable } from './LeaderboardTable'
+export { CompetitionCard } from './CompetitionCard'
+export { CompetitionDetails } from './CompetitionDetails'
+export { AchievementBadge } from './AchievementBadge'
+export { AchievementsList } from './AchievementsList'
+
+// Technical Indicators
+export { TechnicalIndicators } from './TechnicalIndicators'
+
+// News Components
+export { NewsFeed } from './NewsFeed'

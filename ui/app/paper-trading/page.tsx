@@ -23,20 +23,28 @@ import type { Order, PlaceOrderRequest } from "@/lib/paper-trading/types"
 import { 
   Activity, 
   AlertTriangle, 
+  Bell,
   Bot, 
+  BookOpen,
+  ChartLine,
   History, 
   LineChart, 
+  Medal,
+  Newspaper,
   RefreshCcw, 
   ShieldCheck, 
   Sparkles, 
+  Trophy,
   TrendingUp, 
   Wallet,
   Clock,
   BarChart3,
   ExternalLink,
-  X
+  X,
+  HelpCircle
 } from "lucide-react"
 import Link from "next/link"
+import { Badge } from "@/components/ui/Badge"
 import { useEffect, useMemo, useState, useCallback } from "react"
 
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true"
@@ -194,6 +202,56 @@ function PaperTradingWorkspace() {
               icon={Clock} 
               label="Pending Orders" 
               value={pendingOrders.length.toString()} 
+            />
+          </div>
+        </section>
+
+        {/* Quick Navigation */}
+        <section className="rounded-2xl border border-border bg-card/70 p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold">Quick Access</h2>
+            <Link href="/paper-trading/analytics" className="text-sm text-primary hover:underline">
+              View Analytics
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <NavCard 
+              href="/paper-trading/orders" 
+              icon={History} 
+              label="Order History" 
+              description="View all trades"
+            />
+            <NavCard 
+              href="/paper-trading/alerts" 
+              icon={Bell} 
+              label="Price Alerts" 
+              description="Set notifications"
+            />
+            <NavCard 
+              href="/paper-trading/journal" 
+              icon={BookOpen} 
+              label="Trade Journal" 
+              description="Log your trades"
+            />
+            <NavCard 
+              href="/paper-trading/analytics" 
+              icon={ChartLine} 
+              label="Analytics" 
+              description="Performance stats"
+            />
+            <NavCard 
+              href="/paper-trading/leaderboard" 
+              icon={Medal} 
+              label="Leaderboard" 
+              description="Top traders"
+              badge="New"
+            />
+            <NavCard 
+              href="/paper-trading/competitions" 
+              icon={Trophy} 
+              label="Competitions" 
+              description="Join & compete"
+              badge="New"
             />
           </div>
         </section>
@@ -480,6 +538,38 @@ function Feature({ icon: Icon, title, text }: {
       <h3 className="mt-4 font-bold">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
     </div>
+  )
+}
+
+function NavCard({ 
+  href, 
+  icon: Icon, 
+  label, 
+  description,
+  badge 
+}: { 
+  href: string
+  icon: typeof History
+  label: string
+  description: string
+  badge?: string
+}) {
+  return (
+    <Link 
+      href={href}
+      className="group rounded-xl border border-border bg-background/60 p-3 hover:border-primary/50 hover:bg-primary/5 transition"
+    >
+      <div className="flex items-start justify-between">
+        <Icon className="h-5 w-5 text-primary" />
+        {badge && (
+          <Badge variant="success" className="text-[10px] px-1.5 py-0">
+            {badge}
+          </Badge>
+        )}
+      </div>
+      <p className="mt-2 font-semibold text-sm group-hover:text-primary transition">{label}</p>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </Link>
   )
 }
 

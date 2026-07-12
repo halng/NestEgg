@@ -102,6 +102,157 @@ export interface JournalEntry {
   updatedAt?: string
 }
 
+// Leaderboard interfaces
+export interface LeaderboardEntry {
+  rank: number
+  username: string
+  avatar?: string
+  roi: number
+  portfolioValue: number
+  trades: number
+  isCurrentUser?: boolean
+}
+
+export type LeaderboardPeriod = "week" | "month" | "all-time"
+
+// Competition interfaces
+export type CompetitionStatus = "active" | "upcoming" | "ended"
+
+export interface Competition {
+  id: string
+  name: string
+  description: string
+  status: CompetitionStatus
+  startDate: string
+  endDate: string
+  participants: number
+  maxParticipants?: number
+  prizePool: string
+  prizes: CompetitionPrize[]
+  isJoined?: boolean
+  leaderboard?: LeaderboardEntry[]
+}
+
+export interface CompetitionPrize {
+  position: number
+  prize: string
+}
+
+// Achievement interfaces
+export type AchievementCategory = "trading" | "learning" | "social"
+export type AchievementStatus = "unlocked" | "locked" | "in-progress"
+
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  category: AchievementCategory
+  status: AchievementStatus
+  progress?: number
+  maxProgress?: number
+  unlockedAt?: string
+}
+
+// Onboarding Tour Types
+export type TourStepPosition = "top" | "bottom" | "left" | "right"
+
+export interface TourStepConfig {
+  id: string
+  title: string
+  description: string
+  targetSelector: string
+  position: TourStepPosition
+}
+
+export interface OnboardingState {
+  hasCompletedTour: boolean
+  dontShowAgain: boolean
+  completedAt?: string
+}
+
+// Risk Assessment Types
+export type RiskTolerance = "conservative" | "moderate" | "aggressive"
+
+export interface RiskQuizQuestion {
+  id: string
+  question: string
+  options: RiskQuizOption[]
+}
+
+export interface RiskQuizOption {
+  value: string
+  label: string
+  score: number
+}
+
+export interface RiskProfileResult {
+  tolerance: RiskTolerance
+  score: number
+  maxPositionSizePercent: number
+  description: string
+  recommendation: string
+}
+
+export interface RiskProfileState {
+  tolerance: RiskTolerance
+  score: number
+  completedAt: string
+}
+
+// Glossary Types
+export interface GlossaryTerm {
+  term: string
+  definition: string
+  example?: string
+  learnMoreUrl?: string
+}
+
+// Technical Indicator Types
+export type IndicatorType = 'SMA' | 'EMA' | 'RSI' | 'MACD' | 'BOLLINGER'
+
+export interface IndicatorConfig {
+  id: string
+  type: IndicatorType
+  enabled: boolean
+  period: number
+  color: string
+  // MACD specific
+  fastPeriod?: number
+  slowPeriod?: number
+  signalPeriod?: number
+  // Bollinger Bands specific
+  stdDev?: number
+}
+
+export interface MACDResult {
+  macd: number[]
+  signal: number[]
+  histogram: number[]
+}
+
+export interface BollingerBandsResult {
+  upper: number[]
+  middle: number[]
+  lower: number[]
+}
+
+// News Types
+export type NewsCategory = 'market' | 'company' | 'analysis'
+export type NewsSentiment = 'bullish' | 'bearish' | 'neutral'
+
+export interface NewsArticle {
+  id: string
+  title: string
+  summary: string
+  source: string
+  publishedAt: string
+  category: NewsCategory
+  sentiment: NewsSentiment
+  tickers: string[]
+  imageUrl?: string
+}
+
 // Re-export existing types from paper-trading-api.ts for convenience
 export type {
   PaperTradingMarketTicker,
@@ -109,3 +260,23 @@ export type {
   PaperTradingLedgerEntry,
   PaperTradingSession,
 } from "../paper-trading-api"
+
+// Re-export Portfolio types
+export type {
+  Portfolio,
+  PortfolioSummary,
+  PortfolioStrategy,
+} from "./mock-portfolios"
+
+// Re-export Backtest types
+export type {
+  BacktestStrategy,
+  BacktestRule,
+  BacktestResult,
+  BacktestTrade,
+  BacktestIndicator,
+  BacktestCondition,
+  BacktestAction,
+  EquityPoint,
+  PresetStrategy,
+} from "./backtest"
