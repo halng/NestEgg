@@ -1,0 +1,15 @@
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http: # Opens port 4318 inside the container
+        grpc: # Opens port 4317 inside the container
+        
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/blocks
