@@ -57,7 +57,7 @@ jobs:
         run: npx nx run-many --target=test --all --parallel=3
 
       - name: Gate — Full Test Suite (integration)
-        run: npx nx run-many --target=test --configuration=integration --all --parallel=2 || true
+        run: npx nx run-many --target=test --configuration=integration --all --parallel=2
 
       - name: Gate — Coverage Check
         run: npx nx run-many --target=test --coverage --all --parallel=3
@@ -205,19 +205,25 @@ jobs:
     name: Merge Pull Request
     runs-on: ubuntu-latest
     needs: ai-final-review
+    # Only auto-merge on the 'approved' label trigger; issue_comment triggers
+    # route to fix-on-mention (agent fixes), not automatic merge.
     if: |
       needs.ai-final-review.result == 'success' &&
       github.event_name == 'pull_request' &&
       github.event.label.name == 'approved'
+    outputs:
+      pr-number: ${{ steps.merge.outputs.pr-number }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Merge the pull request
+        id: merge
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
+            core.setOutput('pr-number', prNumber);
             const pr = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -289,7 +295,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ needs.merge-pr.outputs.pr-number }}
           body: |
             ## 🚀 Deployment Complete
 
@@ -309,10 +315,11 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const prNumber = '${{ needs.merge-pr.outputs.pr-number }}';
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `[AUTO] Post-merge deployment failure for PR #${{ github.event.pull_request.number }}`,
-              body: `## Post-Merge Deployment Failure\n\nThe post-merge deployment for PR #${{ github.event.pull_request.number }} failed.\n\nWorkflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review logs, apply rollback if needed, and re-trigger deployment.\n\n/cc @${{ github.event.pull_request.user.login }}`,
+              title: `[AUTO] Post-merge deployment failure for PR #${prNumber}`,
+              body: `## Post-Merge Deployment Failure\n\nThe post-merge deployment for PR #${prNumber} failed.\n\nWorkflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\n**Action required:** Review logs, apply rollback if needed, and re-trigger deployment.`,
               labels: ['bug', 'deployment'],
             });
