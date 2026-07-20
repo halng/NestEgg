@@ -911,4 +911,4 @@ scripts/
 
 ## 6. Conclusion
 
-![Design](docs/architecture/issue-to-prod.png)
+![Design](../../docs/architecture/issue-to-prod.png)

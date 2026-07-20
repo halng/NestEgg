@@ -28,7 +28,7 @@ Therefore:
 * All synchronous communication uses **gRPC**
 * All service contracts are defined using Protocol Buffers
 
-![Backend Architecture](docs/architecture/internal-communication.png)
+![Backend Architecture](../../docs/architecture/backend-overall.png)
 
 ---
 
