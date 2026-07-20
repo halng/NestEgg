@@ -1,0 +1,146 @@
+name: "02 - Design"
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  generate-design:
+    name: Generate Architecture Design
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'spec-approved'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure design labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'design-pending', color: 'fbca04', description: 'Architecture design is pending human review' },
+              { name: 'design-approved', color: '0e8a16', description: 'Architecture design has been approved by human reviewer' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+              } catch (e) {
+                if (e.status !== 422) throw e;
+              }
+            }
+
+      - name: Invoke Architect Agent to produce design artifacts
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Technical Architect** agent.
+
+            The feature spec has been approved (`spec-approved`). Please produce the architecture design for this feature:
+
+            1. Create `docs/design/design-${{ github.event.pull_request.number }}.md` containing:
+               - **Architecture Overview** — bounded contexts, service responsibilities, data ownership
+               - **Communication Patterns** — REST, gRPC, Kafka, read-model projections with rationale
+               - **API Contracts** — proto definitions or REST endpoint changes required
+               - **Data Design** — schema changes, migrations, and backward-compatibility strategy
+               - **Security Design** — auth/authz flows, trust boundaries, data minimization
+               - **Observability Plan** — traces, metrics, logs, and dashboards required
+               - **Trade-offs & Risks** — rejected alternatives and their reasoning
+               - **Rollout Strategy** — deployment, migration, and rollback approach
+
+            2. Create an ADR file at `docs/adr/ADR-${{ github.event.pull_request.number }}.md` for any significant decision.
+
+            3. Add or update architecture diagrams in `docs/other/` using Excalidraw if applicable.
+
+            The **Architecture Validator** will check:
+            - ✅ Layering / DDD — bounded contexts and ownership are respected
+            - ✅ Dependency Rules — no circular or upward dependencies
+            - ✅ API Consistency — contracts align with existing proto and REST conventions
+            - ✅ Existing ADR compliance — no conflicts with prior decisions
+            - ✅ Security Checklist — auth, privacy, and secret hygiene covered
+
+      - name: Apply design-pending label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['design-pending'],
+            });
+
+      - name: Remove spec-approved label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: 'spec-approved',
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+
+  validate-design:
+    name: Validate Architecture Design
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'design-pending'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check design artifacts exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const checks = [
+              { dir: 'docs/design', label: 'Design document' },
+              { dir: 'docs/adr',    label: 'ADR' },
+            ];
+
+            let failed = false;
+            for (const { dir, label } of checks) {
+              if (!fs.existsSync(dir)) {
+                core.warning(`${label} directory '${dir}' not found.`);
+                continue;
+              }
+              const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+              if (files.length === 0) {
+                core.warning(`No ${label} files found in ${dir}/.`);
+              }
+            }
+
+            const designDir = 'docs/design';
+            if (fs.existsSync(designDir)) {
+              const requiredSections = [
+                'Architecture Overview', 'Communication Patterns', 'Security', 'Rollout'
+              ];
+              for (const file of fs.readdirSync(designDir).filter(f => f.endsWith('.md'))) {
+                const content = fs.readFileSync(path.join(designDir, file), 'utf8');
+                const missing = requiredSections.filter(s => !content.includes(s));
+                if (missing.length > 0) {
+                  core.setFailed(`Design document '${file}' is missing sections: ${missing.join(', ')}`);
+                  failed = true;
+                }
+              }
+            }
+
+            if (!failed) {
+              core.info('Architecture design validation passed.');
