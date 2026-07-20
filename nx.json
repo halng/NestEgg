@@ -6,21 +6,11 @@
       "@nx/jest": "23.1.0",
       "@nx/cypress": "23.1.0",
       "@nx/next": "23.1.0",
-      "@nx/gradle": "23.1.0",
       "@nx/docker": "23.1.0"
     }
   },
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "analytics": false,
   "plugins": [
-    {
-      "plugin": "@nx/gradle",
-      "options": {
-        "testTargetName": "test",
-        "classesTargetName": "classes",
-        "buildTargetName": "build"
-      }
-    },
     {
       "plugin": "@nx/docker",
       "options": {
@@ -31,8 +21,20 @@
           "name": "docker:run"
         }
       }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "options": {
+        "testTargetName": "test",
+        "classesTargetName": "classes",
+        "buildTargetName": "build"
+      }
     }
   ],
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*"
