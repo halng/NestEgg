@@ -18,9 +18,12 @@ jobs:
   setup:
     name: NX Cloud CI Setup
     runs-on: ubuntu-latest
-    outputs:
-      nx-head: ${{ steps.nx-set-shas.outputs.head }}
-      nx-base: ${{ steps.nx-set-shas.outputs.base }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: gateway
+            task: build
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,12 +36,18 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Derive NX affected SHAs
-        id: nx-set-shas
-        uses: nrwl/nx-set-shas@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: gradle
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build affected projects (for Sonar coverage reports)
+        run: npx nx affected --target=build --base=${{ needs.setup.outputs.nx-base }} --head=${{ needs.setup.outputs.nx-head }} --parallel=3
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
