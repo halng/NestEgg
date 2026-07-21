@@ -42,8 +42,7 @@ jobs:
       - name: Install NX
         run: npm add -g nx@latest
       - name: Install NX Plugins
-        run: npx nx add @nx/gradle@latest
-        working-directory: /NestEgg
+        run: pwd && npx nx add @nx/gradle@latest
       - name: NX Cloud — start CI run
         run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
       - name: Build affected projects
