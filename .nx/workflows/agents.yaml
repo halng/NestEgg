@@ -5,10 +5,10 @@ init-steps:
   - name: Checkout
     uses: "nrwl/nx-cloud-workflows/v4/workflow-steps/checkout/main.yaml"
 
-  - name: Set up Node.js 20
+  - name: Set up Node.js 24.15
     uses: "nrwl/nx-cloud-workflows/v4/workflow-steps/install-node/main.yaml"
     env:
-      NODE_VERSION: "20"
+      NODE_VERSION: "24.15"
 
   - name: Set up JDK 21
     uses: "nrwl/nx-cloud-workflows/v4/workflow-steps/install-java/main.yaml"
