@@ -39,12 +39,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install NX
-        run:  npm add --global nx
       # - name: NX Cloud — start CI run
       #   run: nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
       - name: Build affected projects
-        run: nx affected --target=build --parallel=3
+        run: ./nx affected --target=build --parallel=3
 
   # ── Snyk — Dependency & Code Vulnerability Scan ────────────────────────────
   # snyk:
