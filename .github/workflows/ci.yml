@@ -40,13 +40,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install NX
-        run: npm add -g nx@latest
+        run:  npm add --global nx
       - name: Install NX Plugins
-        run: pwd && npx nx add @nx/gradle@latest
-      - name: NX Cloud — start CI run
-        run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+        run: pwd && nx add @nx/gradle@latest
+      # - name: NX Cloud — start CI run
+      #   run: nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
       - name: Build affected projects
-        run: npx nx affected --target=build --parallel=3
+        run: nx affected --target=build --parallel=3
 
   # ── Snyk — Dependency & Code Vulnerability Scan ────────────────────────────
   # snyk:
