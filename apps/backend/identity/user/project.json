@@ -1,13 +1,13 @@
 {
-  "name": "gateway",
+  "name": "identity-user",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
         "command": "./gradlew clean build -x test ",
-        "cwd": "apps/backend/gateway"
+        "cwd": "apps/backend/identity/user"
       },
-      "outputs": ["{workspaceRoot}/apps/backend/gateway/build"]
+      "outputs": ["{workspaceRoot}/apps/backend/identity/user/build"]
     }
   }
 }

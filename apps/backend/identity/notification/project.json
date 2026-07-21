@@ -1,0 +1,13 @@
+{
+  "name": "identity-notification",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./gradlew clean build -x test ",
+        "cwd": "apps/backend/identity/notification"
+      },
+      "outputs": ["{workspaceRoot}/apps/backend/identity/notification/build"]
+    }
+  }
+}
