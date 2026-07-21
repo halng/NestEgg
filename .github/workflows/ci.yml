@@ -14,9 +14,9 @@ permissions:
   pull-requests: read
 
 jobs:
-  # ── NX Cloud CI Setup ──────────────────────────────────────────────────────
-  setup:
-    name: NX Cloud CI Setup
+  # ── Build affected projects ────────────────────────────────────────────────
+  build:
+    name: Build affected projects
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -35,14 +35,24 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: gradle
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      # - name: NX Cloud — start CI run
-      #   run: nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
+
+      - name: Derive SHAs for nx affected
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Start Nx Cloud CI run
+        run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+
       - name: Build affected projects
         run: ./nx affected --target=build --parallel=3
+        env:
+          NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
   # ── Snyk — Dependency & Code Vulnerability Scan ────────────────────────────
   # snyk:
