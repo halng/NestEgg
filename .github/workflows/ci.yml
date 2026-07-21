@@ -41,8 +41,6 @@ jobs:
           python-version: "3.11"
       - name: Install NX
         run:  npm add --global nx
-      - name: Install NX Plugins
-        run: ls -la && echo "==" && cd .. && nx add @nx/gradle@latest
       # - name: NX Cloud — start CI run
       #   run: nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
       - name: Build affected projects
