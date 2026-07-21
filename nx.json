@@ -6,7 +6,8 @@
       "@nx/jest": "23.1.0",
       "@nx/cypress": "23.1.0",
       "@nx/next": "23.1.0",
-      "@nx/docker": "23.1.0"
+      "@nx/docker": "23.1.0",
+      "@nx/gradle": "23.1.0"
     }
   },
   "analytics": false,
