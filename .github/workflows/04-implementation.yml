@@ -1,0 +1,351 @@
+name: "04 - Implementation"
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: write
+  checks: write
+  statuses: write
+
+env:
+  MAX_RETRIES: 5
+
+jobs:
+  # ── Multi-agent implementation pipeline ────────────────────────────────────
+  multi-agent-pipeline:
+    name: Multi-Agent Implementation Pipeline
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'task-approved'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure implementation labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'ready-for-human-review', color: '0075ca', description: 'Implementation passed all quality gates and AI review' },
+              { name: 'reviewing',              color: 'e4e669', description: 'Human is reviewing the implementation' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+              } catch (e) {
+                if (e.status !== 422) throw e;
+              }
+            }
+
+      - name: Step 1 — Planner Agent (steps & strategy)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Task Planner** agent (step 1 of 5 — Strategy).
+
+            The task plan has been approved. Begin the implementation pipeline by producing a detailed execution strategy:
+
+            - Break the task plan in `docs/tasks/` into ordered implementation steps
+            - Identify the first files and modules to be changed
+            - Highlight dependencies that must be resolved before coding can start (proto, schema, topic setup)
+            - Confirm which tests should be written first (test-first approach)
+            - Document the strategy as a comment or in `docs/tasks/impl-strategy-${{ github.event.pull_request.number }}.md`
+
+            Reply `STRATEGY_COMPLETE` when done to advance to step 2.
+
+      - name: Step 2 — Test Writer Agent (write tests first)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Quality Assurance** agent (step 2 of 5 — Test Writing).
+
+            Following the strategy from step 1, write the tests **before** implementation:
+
+            - Write unit tests for all new business logic
+            - Write integration tests for new service boundaries and API endpoints
+            - Write contract tests for any new or changed proto definitions
+            - Ensure tests initially fail (red) and are placed in the correct test directories
+            - Follow the existing test patterns in `libs/java/testing/` and `libs/python/`
+
+            Reply `TESTS_WRITTEN` when done to advance to step 3.
+
+      - name: Step 3 — Coding Agent (implement)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Backend Engineer** agent (step 3 of 5 — Implementation).
+
+            Implement the feature to make the tests written in step 2 pass:
+
+            - Implement changes in `apps/backend/`, `apps/frontend/`, `proto/`, and `libs/` as required
+            - Follow DDD, bounded-context boundaries, and NestEgg coding standards
+            - Add structured logs, metrics, and traces to all new code paths
+            - Keep auth, authorization, idempotency, and auditability explicit
+            - Do not commit secrets; use environment variables or Kubernetes secrets
+
+            Reply `IMPLEMENTATION_COMPLETE` when done to advance to step 4.
+
+      - name: Step 4 — Reviewer Agent (code review)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Code Reviewer** agent (step 4 of 5 — Code Review).
+
+            Review all changes made in step 3:
+
+            - Check correctness of business logic, state transitions, and error handling
+            - Validate authorization, secret hygiene, data minimization, and privacy-safe telemetry
+            - Inspect proto, Kafka, database, and API changes for compatibility and rollout safety
+            - Verify tests, dashboards, logs, metrics, and traces are appropriate for the risk level
+            - List all blocking findings; separate from non-blocking improvements
+            - Request fixes for blocking issues before advancing
+
+            Reply `REVIEW_COMPLETE` when no blocking issues remain to advance to step 5.
+
+      - name: Step 5 — Refactor Agent (improve & clean)
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Technical Validator** agent (step 5 of 5 — Refactor & Clean).
+
+            Apply final improvements based on the code review findings:
+
+            - Address all blocking issues raised in step 4
+            - Remove dead code, unused imports, and TODO comments (or convert them to issues)
+            - Ensure consistent naming, formatting (run `nx run-many --target=lint`), and documentation
+            - Verify all tests pass (`nx run-many --target=test`)
+            - Confirm the build succeeds (`nx run-many --target=build`)
+
+            Reply `REFACTOR_COMPLETE` when done. The automated quality gates will run next.
+
+      - name: Remove task-approved label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: 'task-approved',
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+
+  # ── Automated Quality Gates ────────────────────────────────────────────────
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+    outputs:
+      gates-passed: ${{ steps.gate-result.outputs.passed }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Gate — Lint & Format
+        id: lint
+        run: npx nx run-many --target=lint --all --parallel=3
+
+      - name: Gate — Build
+        id: build
+        run: npx nx run-many --target=build --all --parallel=3
+
+      - name: Gate — Unit Tests
+        id: unit-tests
+        run: npx nx run-many --target=test --all --parallel=3
+
+      - name: Gate — Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      - name: Gate — Dependency Vulnerability Scan
+        run: |
+          if [ -f "package.json" ]; then
+            npm audit --audit-level=high
+          fi
+
+      - name: Gate — Architecture Check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            try {
+              execSync('npx nx graph --file=/tmp/dep-graph.json', { stdio: 'pipe' });
+              core.info('Architecture dependency graph generated successfully.');
+            } catch (e) {
+              core.warning('Could not generate dependency graph: ' + e.message);
+            }
+
+      - name: Set gate result
+        id: gate-result
+        run: echo "passed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Report gate failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## ❌ Quality Gate Failed\n\nOne or more automated quality gates failed. The self-correction loop will attempt to fix the issues.\n\nPlease check the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for details.`,
+            });
+
+  # ── Self-Correction Loop ───────────────────────────────────────────────────
+  self-correction:
+    name: Self-Correction Loop
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    if: needs.quality-gates.result == 'failure'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Failure Analyzer — Collect logs and identify root cause
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Failure Analyzer** agent.
+
+            The automated quality gates have failed. Please:
+
+            1. **Collect** — Review the CI logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            2. **Diagnose** — Identify the root cause (code error, test failure, lint violation, secret exposure, dependency vulnerability, or architecture violation)
+            3. **Plan Fix** — Determine which of the following agents should fix the issue:
+               - **Egg Backend Engineer** — for build or implementation errors
+               - **Egg Quality Assurance** — for test failures or coverage gaps
+               - **Egg Technical Validator** — for lint, format, or architecture violations
+               - **Egg Security Analyzer** — for secret exposure or vulnerability findings
+            4. **Fix** — Apply the minimal fix required to pass the failing gate
+            5. **Verify** — Confirm the fix resolves the issue without introducing regressions
+
+            This is an automated self-correction attempt. Maximum retries: ${{ env.MAX_RETRIES }}.
+
+            ⚠️ If this is retry 5 of 5, stop and post a failure summary with:
+            - Logs and stack trace
+            - Suggested root cause
+            - Suggested fix for human review
+
+  # ── AI Pre-Human Review ────────────────────────────────────────────────────
+  ai-review:
+    name: AI Pre-Human Review
+    runs-on: ubuntu-latest
+    needs: quality-gates
+    if: needs.quality-gates.result == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure ready-for-human-review label exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'ready-for-human-review',
+                color: '0075ca',
+                description: 'Implementation passed all quality gates and AI review',
+              });
+            } catch (e) {
+              if (e.status !== 422) throw e;
+            }
+
+      - name: Invoke Code Reviewer Agent for AI pre-human review
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Code Reviewer** agent for the **AI Pre-Human Review**.
+
+            All automated quality gates have passed ✅. Please perform a final AI review before this PR goes to human reviewers:
+
+            - **Code Review** — correctness, error handling, edge cases, and anti-patterns
+            - **Design Compliance** — implementation matches the approved design in `docs/design/`
+            - **Security Review** — auth, authz, secret hygiene, injection risks, and privacy
+            - **Performance** — no obvious N+1 queries, unbounded loops, or blocking I/O
+            - **Maintainability** — naming, structure, documentation, and test quality
+            - **Best Practices** — follows NestEgg coding standards and Nx project conventions
+
+            If no blocking issues are found, reply `AI_REVIEW_APPROVED` and the PR will be labeled `ready-for-human-review`.
+            If blocking issues exist, list them clearly and request fixes before human review.
+
+      - name: Apply ready-for-human-review label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['ready-for-human-review'],
+            });
+
+      - name: Comment requesting human review
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## ✅ Implementation Ready for Human Review
+
+            The multi-agent implementation pipeline and all automated quality gates have passed.
+            The AI pre-human review is complete.
+
+            **Next steps:**
+            1. A human reviewer should review the changes
+            2. Apply the `reviewing` label when review is in progress
+            3. Approve the PR and apply the `approved` label when satisfied
+
+            This will trigger the **Merge & Release** workflow (Stage 05).

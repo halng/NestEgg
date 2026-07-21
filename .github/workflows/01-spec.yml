@@ -1,0 +1,113 @@
+name: "01 - Spec"
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  generate-spec:
+    name: Generate Feature Spec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure spec-pending label exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'spec-pending', color: 'fbca04', description: 'Feature spec is pending human review' },
+              { name: 'spec-approved', color: '0e8a16', description: 'Feature spec has been approved by human reviewer' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+              } catch (e) {
+                if (e.status !== 422) throw e; // 422 = already exists
+              }
+            }
+
+      - name: Label issue as spec-pending
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['spec-pending'],
+            });
+
+      - name: Invoke Planner Agent to write feature spec
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            @copilot You are acting as the **Egg Business Analyst** agent.
+
+            A new issue has been opened. Please read the issue description above and produce a feature specification:
+
+            1. Create a file at `docs/specs/feature-${{ github.event.issue.number }}.md` containing:
+               - **Summary** — business context and user value
+               - **User Stories** — clear actors, triggers, and outcomes
+               - **Acceptance Criteria** — completeness, clarity, and testability for every story
+               - **Scope** — in-scope and explicitly out-of-scope items
+               - **Dependencies** — cross-service impacts across `apps/backend/`, `apps/frontend/`, `proto/`, and `infra/`
+               - **Risks** — privacy, security, compliance, and delivery risks
+               - **Open Questions** — assumptions that must be resolved before implementation
+
+            2. Open a Pull Request with the spec file linked to this issue (`Closes #${{ github.event.issue.number }}`).
+
+            Once the PR is open, the **Spec Validator** will automatically check:
+            - ✅ Completeness — all required sections present
+            - ✅ Clarity — no ambiguous or untestable acceptance criteria
+            - ✅ Acceptance Criteria — measurable outcomes for every user story
+
+            Label `spec-pending` has been applied. A human reviewer will add `spec-approved` when the spec is accepted, which triggers the Design stage.
+
+  validate-spec:
+    name: Validate Feature Spec (on PR)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check spec file exists and is complete
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const specDir = 'docs/specs';
+            if (!fs.existsSync(specDir)) {
+              core.setFailed(`Spec directory '${specDir}' not found. Please create the spec file.`);
+              return;
+            }
+            const files = fs.readdirSync(specDir).filter(f => f.endsWith('.md'));
+            if (files.length === 0) {
+              core.setFailed('No spec file found in docs/specs/. The Planner Agent must create one.');
+              return;
+            }
+            const requiredSections = [
+              'Summary', 'User Stories', 'Acceptance Criteria', 'Scope', 'Dependencies'
+            ];
+            for (const file of files) {
+              const content = fs.readFileSync(path.join(specDir, file), 'utf8');
+              const missing = requiredSections.filter(s => !content.includes(s));
+              if (missing.length > 0) {
+                core.setFailed(`Spec file '${file}' is missing sections: ${missing.join(', ')}`);
+              }
+            }
+            core.info('Spec validation passed.');

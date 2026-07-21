@@ -1,0 +1,133 @@
+name: "03 - Tasks"
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  issues: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  generate-tasks:
+    name: Generate Task Plan
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'design-approved'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure task labels exist
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = [
+              { name: 'task-pending', color: 'fbca04', description: 'Task plan is pending human review' },
+              { name: 'task-approved', color: '0e8a16', description: 'Task plan has been approved by human reviewer' },
+            ];
+            for (const label of labels) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...label,
+                });
+              } catch (e) {
+                if (e.status !== 422) throw e;
+              }
+            }
+
+      - name: Invoke Task Planner Agent to generate task list
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Task Planner** agent.
+
+            The architecture design has been approved (`design-approved`). Please generate an executable task plan:
+
+            1. Create `docs/tasks/tasks-${{ github.event.pull_request.number }}.md` containing:
+               - **Task List** — sequenced, atomic tasks scoped to owning service, module, or library
+               - **Dependency Graph** — which tasks must be completed before others can start
+               - **Test Plan** — unit, integration, and contract tests required per task
+               - **Risk Assessment** — high-risk tasks with mitigation strategies
+               - **Parallelizable Work** — tasks that can be done concurrently by different teams
+               - **Enabler Tasks** — proto changes, topic setup, schema migrations, auth configuration
+               - **Rollout Tasks** — deployment, migration, monitoring, and rollback validation steps
+               - **Estimated Complexity** — S/M/L/XL per task with brief justification
+
+            The **Task Validator** will check:
+            - ✅ Coverage — all design decisions have corresponding implementation tasks
+            - ✅ Dependencies — task ordering is correct and respects service boundaries
+            - ✅ Feasibility — no tasks span multiple bounded contexts without justification
+            - ✅ Test Plan — testing, observability, security, and rollout tasks are included
+
+      - name: Apply task-pending label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['task-pending'],
+            });
+
+      - name: Remove design-approved label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: 'design-approved',
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+
+  validate-tasks:
+    name: Validate Task Plan
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'task-pending'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check task plan exists and is complete
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const tasksDir = 'docs/tasks';
+
+            if (!fs.existsSync(tasksDir)) {
+              core.setFailed(`Tasks directory '${tasksDir}' not found. The Task Planner Agent must create it.`);
+              return;
+            }
+
+            const files = fs.readdirSync(tasksDir).filter(f => f.endsWith('.md'));
+            if (files.length === 0) {
+              core.setFailed('No task plan found in docs/tasks/. The Task Planner Agent must create one.');
+              return;
+            }
+
+            const requiredSections = [
+              'Task List', 'Dependency', 'Test Plan', 'Risk'
+            ];
+
+            for (const file of files) {
+              const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
+              const missing = requiredSections.filter(s => !content.includes(s));
+              if (missing.length > 0) {
+                core.setFailed(`Task plan '${file}' is missing sections: ${missing.join(', ')}`);
+                return;
+              }
+            }
+
+            core.info('Task plan validation passed.');
