@@ -6,7 +6,7 @@ on:
 
 permissions:
   issues: write
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -15,8 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'spec-approved'
     steps:
-      - name: Checkout repository
+      - name: Checkout pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Ensure design labels exist
         uses: actions/github-script@v7
@@ -39,12 +42,23 @@ jobs:
             }
 
       - name: Invoke Architect Agent to produce design artifacts
-        uses: peter-evans/create-or-update-comment@v4
+        uses: openai/codex-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Technical Architect** agent.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: workspace-write
+          prompt: |
+            You are acting as the **Egg Technical Architect** agent.
+
+            Before doing any work, read `agents/egg-techinical-architect.md` in full. From its YAML front matter,
+            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
+            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
+
+            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
+            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
+            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
+            Do not stop at a plan or a prose-only response when repository changes are requested.
 
             The feature spec has been approved (`spec-approved`). Please produce the architecture design for this feature:
 
@@ -100,8 +114,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'design-pending'
     steps:
-      - name: Checkout repository
+      - name: Checkout pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Check design artifacts exist
         uses: actions/github-script@v7
