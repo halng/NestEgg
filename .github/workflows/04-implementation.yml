@@ -6,7 +6,7 @@ on:
 
 permissions:
   issues: write
-  contents: write
+  contents: read
   pull-requests: write
   checks: write
   statuses: write
@@ -21,11 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'task-approved'
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
 
       - name: Ensure implementation labels exist
         uses: actions/github-script@v7
@@ -48,23 +45,12 @@ jobs:
             }
 
       - name: Step 1 — Planner Agent (steps & strategy)
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Task Planner** agent (step 1 of 5 — Strategy).
-
-            Before doing any work, read `agents/egg-task-planner.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Task Planner** agent (step 1 of 5 — Strategy).
 
             The task plan has been approved. Begin the implementation pipeline by producing a detailed execution strategy:
 
@@ -77,23 +63,12 @@ jobs:
             Reply `STRATEGY_COMPLETE` when done to advance to step 2.
 
       - name: Step 2 — Test Writer Agent (write tests first)
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Quality Assurance** agent (step 2 of 5 — Test Writing).
-
-            Before doing any work, read `agents/egg-quality-assurance.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Quality Assurance** agent (step 2 of 5 — Test Writing).
 
             Following the strategy from step 1, write the tests **before** implementation:
 
@@ -106,23 +81,12 @@ jobs:
             Reply `TESTS_WRITTEN` when done to advance to step 3.
 
       - name: Step 3 — Coding Agent (implement)
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Backend Engineer** agent (step 3 of 5 — Implementation).
-
-            Before doing any work, read `agents/egg-backend-enginner.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Backend Engineer** agent (step 3 of 5 — Implementation).
 
             Implement the feature to make the tests written in step 2 pass:
 
@@ -135,23 +99,12 @@ jobs:
             Reply `IMPLEMENTATION_COMPLETE` when done to advance to step 4.
 
       - name: Step 4 — Reviewer Agent (code review)
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Code Reviewer** agent (step 4 of 5 — Code Review).
-
-            Before doing any work, read `agents/egg-code-reviewer.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Code Reviewer** agent (step 4 of 5 — Code Review).
 
             Review all changes made in step 3:
 
@@ -165,23 +118,12 @@ jobs:
             Reply `REVIEW_COMPLETE` when no blocking issues remain to advance to step 5.
 
       - name: Step 5 — Refactor Agent (improve & clean)
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Technical Validator** agent (step 5 of 5 — Refactor & Clean).
-
-            Before doing any work, read `agents/egg-techinical-validator.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Technical Validator** agent (step 5 of 5 — Refactor & Clean).
 
             Apply final improvements based on the code review findings:
 
@@ -216,11 +158,8 @@ jobs:
     outputs:
       gates-passed: ${{ steps.gate-result.outputs.passed }}
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
         with:
           fetch-depth: 0
 
@@ -306,30 +245,16 @@ jobs:
     needs: quality-gates
     if: needs.quality-gates.result == 'failure'
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
 
       - name: Failure Analyzer — Collect logs and identify root cause
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Failure Analyzer** agent.
-
-            Before doing any work, read `agents/egg-failure-analyzer.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Failure Analyzer** agent.
 
             The automated quality gates have failed. Please:
 
@@ -357,11 +282,8 @@ jobs:
     needs: quality-gates
     if: needs.quality-gates.result == 'success'
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
 
       - name: Ensure ready-for-human-review label exists
         uses: actions/github-script@v7
@@ -380,23 +302,12 @@ jobs:
             }
 
       - name: Invoke Code Reviewer Agent for AI pre-human review
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Code Reviewer** agent for the **AI Pre-Human Review**.
-
-            Before doing any work, read `agents/egg-code-reviewer.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Code Reviewer** agent for the **AI Pre-Human Review**.
 
             All automated quality gates have passed ✅. Please perform a final AI review before this PR goes to human reviewers:
 

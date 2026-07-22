@@ -6,7 +6,7 @@ on:
 
 permissions:
   issues: write
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -15,11 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'design-approved'
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
 
       - name: Ensure task labels exist
         uses: actions/github-script@v7
@@ -42,23 +39,12 @@ jobs:
             }
 
       - name: Invoke Task Planner Agent to generate task list
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Task Planner** agent.
-
-            Before doing any work, read `agents/egg-task-planner.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            @copilot You are acting as the **Egg Task Planner** agent.
 
             The architecture design has been approved (`design-approved`). Please generate an executable task plan:
 
@@ -109,11 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'task-pending'
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
 
       - name: Check task plan exists and is complete
         uses: actions/github-script@v7
