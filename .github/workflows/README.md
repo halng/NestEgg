@@ -21,11 +21,11 @@ Each Codex prompt names the exact role file. This preserves the design's shared 
 
 | Stage | Trigger | Codex role(s) | Artifact or outcome | Human gate |
 | --- | --- | --- | --- | --- |
-| **01 Spec** (`01-spec.yml`) | Issue opened or reopened | Egg Business Analyst | `docs/specs/feature-<issue>.md` and a PR labeled `spec-pending`; the workflow also validates required sections on PR updates | `spec-approved` |
+| **01 Spec** (`01-spec.yml`) | New issue opened | Egg Business Analyst | `docs/spec/feature-<issue>.md`, validation, and a PR labeled `spec-pending` | `spec-approved` |
 | **02 Design** (`02-design.yml`) | `spec-approved` on the PR | Egg Technical Architect | Design, ADRs, and diagrams; `design-pending` | `design-approved` |
 | **03 Tasks** (`03-tasks.yml`) | `design-approved` on the PR | Egg Task Planner | Sequenced task list, dependencies, risks, and test plan; `task-pending` | `task-approved` |
 | **04 Implementation** (`04-implementation.yml`) | `task-approved` on the PR | Task Planner → Quality Assurance → Backend Engineer → Code Reviewer → Technical Validator | Test-first implementation, review/refactor, automated quality gates, and `ready-for-human-review` | `reviewing`, then `approved` |
-| **05 Merge & Release** (`05-fix-on-mention.yml`) | `approved`, or an `@codex` PR command | Technical Validator, Security Analyzer, or Backend Engineer as routed | Final CI, `pending-final-review`, squash merge, preview/smoke/canary deployment, and monitoring | Final human approval |
+| **05 Merge & Release** (`05-fix-on-mention.yml`) | `approved` label on the PR | Egg Technical Validator | Final CI, `pending-final-review`, squash merge, preview/smoke/canary deployment, and monitoring | Final human approval |
 
 ```mermaid
 flowchart TD
@@ -50,11 +50,9 @@ flowchart TD
   G --> X[Preview · smoke · canary · monitor / rollback]
 ```
 
-## Labels and commands
+## Labels and triggers
 
-Pending labels (`spec-pending`, `design-pending`, `task-pending`, and `pending-final-review`) signal that an artifact is ready for review. Approval labels advance the same PR to the next numbered stage.
-
-On a PR, mention `@codex` to route a corrective request. Supported intent includes security fixes, performance optimization, build/test/lint fixes, `regenerate tests`, and `/re-run`. The workflow selects the appropriate repository role, and that role loads its declared skills before changing anything.
+Only Stage 01 listens for a newly opened issue. Stages 02 through 05 listen for pull-request label changes. Pending labels (`spec-pending`, `design-pending`, `task-pending`, and `pending-final-review`) signal that an artifact is ready for review; approval labels advance the same pull request to the next numbered stage.
 
 ## Quality and recovery
 

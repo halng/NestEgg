@@ -3,8 +3,6 @@ name: "05 - Merge & Release"
 on:
   pull_request:
     types: [labeled]
-  issue_comment:
-    types: [created]
 
 permissions:
   issues: write
@@ -18,12 +16,7 @@ jobs:
   final-ci:
     name: Final CI Pipeline
     runs-on: ubuntu-latest
-    if: >
-      (github.event_name == 'pull_request' && github.event.label.name == 'approved') ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.pull_request != null &&
-       contains(github.event.comment.body, '@codex') &&
-       (contains(github.event.comment.body, '/re-run') || contains(github.event.comment.body, 'regenerate tests')))
+    if: github.event.label.name == 'approved'
     outputs:
       ci-passed: ${{ steps.ci-result.outputs.passed }}
     steps:
@@ -77,92 +70,6 @@ jobs:
         id: ci-result
         run: echo "passed=true" >> "$GITHUB_OUTPUT"
 
-  # ── Fix on Mention ─────────────────────────────────────────────────────────
-  fix-on-mention:
-    name: Fix on Agent Mention
-    runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'issue_comment' &&
-      github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@codex') &&
-      !contains(github.event.comment.body, '/re-run') &&
-      !contains(github.event.comment.body, 'regenerate tests')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Detect command and route to appropriate agent
-        uses: actions/github-script@v7
-        id: detect-command
-        with:
-          script: |
-            const body = context.payload.comment.body;
-            if (body.includes('fix security') || body.includes('security issue')) {
-              core.setOutput('agent', 'security');
-            } else if (body.includes('optimize') || body.includes('performance')) {
-              core.setOutput('agent', 'performance');
-            } else if (body.includes('fix test') || body.includes('fix build') || body.includes('fix lint')) {
-              core.setOutput('agent', 'fix');
-            } else {
-              core.setOutput('agent', 'general');
-            }
-            core.setOutput('command', body);
-
-      - name: Route to Security Analyzer
-        if: steps.detect-command.outputs.agent == 'security'
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Security Analyzer** agent.
-
-            Before doing any work, read `agents/egg-security-analyzer.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
-
-            A security issue has been flagged in this PR. Please:
-
-            1. Review the specific concern mentioned: `${{ steps.detect-command.outputs.command }}`
-            2. Identify the affected files and code paths
-            3. Apply the minimal, safe fix that eliminates the vulnerability
-            4. Verify the fix with appropriate security tests
-            5. Document what was changed and why
-
-      - name: Route to Backend Engineer for general fixes
-        if: steps.detect-command.outputs.agent == 'fix' || steps.detect-command.outputs.agent == 'general'
-        uses: openai/codex-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          sandbox: workspace-write
-          prompt: |
-            You are acting as the **Egg Backend Engineer** agent responding to a developer command.
-
-            Before doing any work, read `agents/egg-backend-enginner.md` in full. From its YAML front matter,
-            load every entry in `skills:` by reading the matching `skills/<skill-name>.md` file in full.
-            Treat the role and skill files as authoritative instructions for this run, and state which files you loaded.
-
-            Work from the checked-out repository and GitHub event for `${{ github.repository }}`. Inspect the issue or
-            pull request with `gh` when more context is needed; `GH_TOKEN` is available. If the task changes files,
-            make the edits, run focused validation, commit them, and push the current branch so later jobs can use them.
-            Do not stop at a plan or a prose-only response when repository changes are requested.
-
-            Please address the following request from a developer:
-
-            > ${{ steps.detect-command.outputs.command }}
-
-            Analyse the current state of the PR, apply the requested changes, and push the fix.
-            Ensure all existing tests continue to pass after the change.
-
   # ── AI Final Review ────────────────────────────────────────────────────────
   ai-final-review:
     name: AI Final Review
@@ -193,8 +100,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request?.number ?? context.payload.issue?.number;
-            if (!prNumber) { core.warning('Could not determine PR number.'); return; }
+            const prNumber = context.payload.pull_request.number;
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -225,7 +131,7 @@ jobs:
 
             - Confirm the implementation matches the approved design in `docs/design/`
             - Verify no regressions were introduced by the self-correction loop
-            - Check that all acceptance criteria from `docs/specs/` are satisfied
+            - Check that all acceptance criteria from `docs/spec/` are satisfied
             - Confirm observability (logs, metrics, traces) is production-ready
             - Validate rollout safety (no breaking changes without migration path)
             - Ensure no secrets, debug artifacts, or temporary code remain
@@ -238,8 +144,6 @@ jobs:
     name: Merge Pull Request
     runs-on: ubuntu-latest
     needs: ai-final-review
-    # Only auto-merge on the 'approved' label trigger; issue_comment triggers
-    # route to fix-on-mention (agent fixes), not automatic merge.
     if: |
       needs.ai-final-review.result == 'success' &&
       github.event_name == 'pull_request' &&
