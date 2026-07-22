@@ -44,9 +44,6 @@ jobs:
       - name: Derive SHAs for nx affected
         uses: nrwl/nx-set-shas@v4
 
-      - name: Start Nx Cloud CI run
-        run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/agents.yaml" --stop-agents-after="build"
-
       - name: Build affected projects
         run: ./nx affected --target=build --parallel=3
 
@@ -173,20 +170,11 @@ jobs:
     #     with:
     #       python-version: "3.11"
 
-    #   - name: NX Cloud — start CI run
-    #     run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js"
-    #     env:
-    #       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
     #   - name: Build affected projects (for Sonar coverage reports)
     #     run: npx nx affected --target=build --base=${{ needs.setup.outputs.nx-base }} --head=${{ needs.setup.outputs.nx-head }} --parallel=3
-    #     env:
-    #       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
     #   - name: Run tests with coverage for affected projects
     #     run: npx nx affected --target=test --base=${{ needs.setup.outputs.nx-base }} --head=${{ needs.setup.outputs.nx-head }} --parallel=3 --coverage
-    #     env:
-    #       NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
     #     continue-on-error: true
 
     #   - name: SonarCloud Scan
