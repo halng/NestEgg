@@ -3,16 +3,21 @@ name: "01 - Spec"
 on:
   issues:
     types: [opened, reopened]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "docs/specs/**"
 
 permissions:
   issues: write
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
   generate-spec:
     name: Generate Feature Spec
     runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,33 +53,33 @@ jobs:
               labels: ['spec-pending'],
             });
 
-      - name: Invoke Planner Agent to write feature spec
-        uses: peter-evans/create-or-update-comment@v4
+      - name: Invoke Planner Agent to write feature spec with Codex CLI
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            @copilot You are acting as the **Egg Business Analyst** agent.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-business-analyst
+          skills: architecture security
+          prompt: |
+            Generate a feature specification for issue #${{ github.event.issue.number }} from its title and body below. Create docs/specs/feature-${{ github.event.issue.number }}.md with Summary, User Stories, Acceptance Criteria, Scope, Dependencies, Risks, and Open Questions. Ensure every criterion is measurable.
 
-            A new issue has been opened. Please read the issue description above and produce a feature specification:
+            Issue title: ${{ github.event.issue.title }}
+            Issue body: ${{ github.event.issue.body }}
 
-            1. Create a file at `docs/specs/feature-${{ github.event.issue.number }}.md` containing:
-               - **Summary** — business context and user value
-               - **User Stories** — clear actors, triggers, and outcomes
-               - **Acceptance Criteria** — completeness, clarity, and testability for every story
-               - **Scope** — in-scope and explicitly out-of-scope items
-               - **Dependencies** — cross-service impacts across `apps/backend/`, `apps/frontend/`, `proto/`, and `infra/`
-               - **Risks** — privacy, security, compliance, and delivery risks
-               - **Open Questions** — assumptions that must be resolved before implementation
-
-            2. Open a Pull Request with the spec file linked to this issue (`Closes #${{ github.event.issue.number }}`).
-
-            Once the PR is open, the **Spec Validator** will automatically check:
-            - ✅ Completeness — all required sections present
-            - ✅ Clarity — no ambiguous or untestable acceptance criteria
-            - ✅ Acceptance Criteria — measurable outcomes for every user story
-
-            Label `spec-pending` has been applied. A human reviewer will add `spec-approved` when the spec is accepted, which triggers the Design stage.
+      - name: Publish specification pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          branch="codex/spec-${{ github.event.issue.number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add docs/specs/
+          git commit -m "docs: add specification for issue #${{ github.event.issue.number }}"
+          git push --set-upstream origin "$branch"
+          gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" \
+            --title "Spec: ${{ github.event.issue.title }}" \
+            --body "Closes #${{ github.event.issue.number }}"
 
   validate-spec:
     name: Validate Feature Spec (on PR)

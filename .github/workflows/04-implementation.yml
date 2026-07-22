@@ -6,7 +6,7 @@ on:
 
 permissions:
   issues: write
-  contents: read
+  contents: write
   pull-requests: write
   checks: write
   statuses: write
@@ -21,8 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'task-approved'
     steps:
-      - name: Checkout repository
+      - name: Checkout pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ensure implementation labels exist
         uses: actions/github-script@v7
@@ -45,12 +49,13 @@ jobs:
             }
 
       - name: Step 1 — Planner Agent (steps & strategy)
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Task Planner** agent (step 1 of 5 — Strategy).
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-task-planner
+          skills: architecture testing
+          prompt: |
+            You are acting as the **Egg Task Planner** agent (step 1 of 5 — Strategy).
 
             The task plan has been approved. Begin the implementation pipeline by producing a detailed execution strategy:
 
@@ -63,12 +68,13 @@ jobs:
             Reply `STRATEGY_COMPLETE` when done to advance to step 2.
 
       - name: Step 2 — Test Writer Agent (write tests first)
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Quality Assurance** agent (step 2 of 5 — Test Writing).
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-quality-assurance
+          skills: testing
+          prompt: |
+            You are acting as the **Egg Quality Assurance** agent (step 2 of 5 — Test Writing).
 
             Following the strategy from step 1, write the tests **before** implementation:
 
@@ -81,12 +87,13 @@ jobs:
             Reply `TESTS_WRITTEN` when done to advance to step 3.
 
       - name: Step 3 — Coding Agent (implement)
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Backend Engineer** agent (step 3 of 5 — Implementation).
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-backend-enginner
+          skills: architecture database grpc-protobuf kafka-events observability security testing
+          prompt: |
+            You are acting as the **Egg Backend Engineer** agent (step 3 of 5 — Implementation).
 
             Implement the feature to make the tests written in step 2 pass:
 
@@ -99,12 +106,13 @@ jobs:
             Reply `IMPLEMENTATION_COMPLETE` when done to advance to step 4.
 
       - name: Step 4 — Reviewer Agent (code review)
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Code Reviewer** agent (step 4 of 5 — Code Review).
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-code-reviewer
+          skills: code-review security testing
+          prompt: |
+            You are acting as the **Egg Code Reviewer** agent (step 4 of 5 — Code Review).
 
             Review all changes made in step 3:
 
@@ -118,12 +126,13 @@ jobs:
             Reply `REVIEW_COMPLETE` when no blocking issues remain to advance to step 5.
 
       - name: Step 5 — Refactor Agent (improve & clean)
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Technical Validator** agent (step 5 of 5 — Refactor & Clean).
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-techinical-validator
+          skills: architecture code-review security testing
+          prompt: |
+            You are acting as the **Egg Technical Validator** agent (step 5 of 5 — Refactor & Clean).
 
             Apply final improvements based on the code review findings:
 
@@ -134,6 +143,19 @@ jobs:
             - Confirm the build succeeds (`nx run-many --target=build`)
 
             Reply `REFACTOR_COMPLETE` when done. The automated quality gates will run next.
+
+      - name: Commit and push Codex implementation
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Codex completed without repository changes."
+          else
+            git commit -m "feat: implement approved task plan with Codex"
+            git push
+          fi
 
       - name: Remove task-approved label
         uses: actions/github-script@v7
@@ -154,7 +176,8 @@ jobs:
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'synchronize'
+    needs: multi-agent-pipeline
+    if: needs.multi-agent-pipeline.result == 'success'
     outputs:
       gates-passed: ${{ steps.gate-result.outputs.passed }}
     steps:
@@ -166,20 +189,20 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
           cache: gradle
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Node dependencies
         run: npm ci
@@ -249,12 +272,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Failure Analyzer — Collect logs and identify root cause
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Failure Analyzer** agent.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-failure-analyzer
+          skills: code-review security testing
+          prompt: |
+            You are acting as the **Egg Failure Analyzer** agent.
 
             The automated quality gates have failed. Please:
 
@@ -302,12 +326,13 @@ jobs:
             }
 
       - name: Invoke Code Reviewer Agent for AI pre-human review
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Code Reviewer** agent for the **AI Pre-Human Review**.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-code-reviewer
+          skills: code-review security testing
+          prompt: |
+            You are acting as the **Egg Code Reviewer** agent for the **AI Pre-Human Review**.
 
             All automated quality gates have passed ✅. Please perform a final AI review before this PR goes to human reviewers:
 

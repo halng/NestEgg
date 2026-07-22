@@ -6,7 +6,7 @@ on:
 
 permissions:
   issues: write
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -17,6 +17,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ensure design labels exist
         uses: actions/github-script@v7
@@ -38,36 +42,24 @@ jobs:
               }
             }
 
-      - name: Invoke Architect Agent to produce design artifacts
-        uses: peter-evans/create-or-update-comment@v4
+      - name: Invoke Architect Agent to produce design artifacts with Codex CLI
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            @copilot You are acting as the **Egg Technical Architect** agent.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-techinical-architect
+          skills: architecture database grpc-protobuf kafka-events observability security
+          prompt: |
+            The feature specification on PR #${{ github.event.pull_request.number }} is approved. Read docs/specs/ and create docs/design/design-${{ github.event.pull_request.number }}.md covering architecture overview, communication patterns, API contracts, data design, security, observability, trade-offs, risks, and rollout. Create a matching ADR in docs/adr/ for every significant decision.
 
-            The feature spec has been approved (`spec-approved`). Please produce the architecture design for this feature:
-
-            1. Create `docs/design/design-${{ github.event.pull_request.number }}.md` containing:
-               - **Architecture Overview** — bounded contexts, service responsibilities, data ownership
-               - **Communication Patterns** — REST, gRPC, Kafka, read-model projections with rationale
-               - **API Contracts** — proto definitions or REST endpoint changes required
-               - **Data Design** — schema changes, migrations, and backward-compatibility strategy
-               - **Security Design** — auth/authz flows, trust boundaries, data minimization
-               - **Observability Plan** — traces, metrics, logs, and dashboards required
-               - **Trade-offs & Risks** — rejected alternatives and their reasoning
-               - **Rollout Strategy** — deployment, migration, and rollback approach
-
-            2. Create an ADR file at `docs/adr/ADR-${{ github.event.pull_request.number }}.md` for any significant decision.
-
-            3. Add or update architecture diagrams in `docs/other/` using Excalidraw if applicable.
-
-            The **Architecture Validator** will check:
-            - ✅ Layering / DDD — bounded contexts and ownership are respected
-            - ✅ Dependency Rules — no circular or upward dependencies
-            - ✅ API Consistency — contracts align with existing proto and REST conventions
-            - ✅ Existing ADR compliance — no conflicts with prior decisions
-            - ✅ Security Checklist — auth, privacy, and secret hygiene covered
+      - name: Commit and push Codex artifacts
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet && { echo "Codex produced no artifact changes"; exit 1; }
+          git commit -m "docs: generate architecture design with Codex"
+          git push
 
       - name: Apply design-pending label
         uses: actions/github-script@v7

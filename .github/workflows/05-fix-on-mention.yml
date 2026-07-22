@@ -22,7 +22,7 @@ jobs:
       (github.event_name == 'pull_request' && github.event.label.name == 'approved') ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request != null &&
-       contains(github.event.comment.body, '@copilot') &&
+       contains(github.event.comment.body, '@codex') &&
        (contains(github.event.comment.body, '/re-run') || contains(github.event.comment.body, 'regenerate tests')))
     outputs:
       ci-passed: ${{ steps.ci-result.outputs.passed }}
@@ -35,20 +35,20 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
           cache: gradle
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install Node dependencies
         run: npm ci
@@ -84,12 +84,19 @@ jobs:
     if: >
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@copilot') &&
+      contains(github.event.comment.body, '@codex') &&
       !contains(github.event.comment.body, '/re-run') &&
       !contains(github.event.comment.body, 'regenerate tests')
     steps:
-      - name: Checkout repository
+      - name: Checkout pull request branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check out the contributor branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout "${{ github.event.issue.number }}"
 
       - name: Detect command and route to appropriate agent
         uses: actions/github-script@v7
@@ -110,12 +117,13 @@ jobs:
 
       - name: Route to Security Analyzer
         if: steps.detect-command.outputs.agent == 'security'
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            @copilot You are acting as the **Egg Security Analyzer** agent.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-security-analyzer
+          skills: security testing
+          prompt: |
+            You are acting as the **Egg Security Analyzer** agent.
 
             A security issue has been flagged in this PR. Please:
 
@@ -126,13 +134,14 @@ jobs:
             5. Document what was changed and why
 
       - name: Route to Backend Engineer for general fixes
-        if: steps.detect-command.outputs.agent == 'fix' || steps.detect-command.outputs.agent == 'general'
-        uses: peter-evans/create-or-update-comment@v4
+        if: steps.detect-command.outputs.agent == 'fix' || steps.detect-command.outputs.agent == 'performance' || steps.detect-command.outputs.agent == 'general'
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            @copilot You are acting as the **Egg Backend Engineer** agent responding to a developer command.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-backend-enginner
+          skills: architecture code-review security testing
+          prompt: |
+            You are acting as the **Egg Backend Engineer** agent responding to a developer command.
 
             Please address the following request from a developer:
 
@@ -140,6 +149,19 @@ jobs:
 
             Analyse the current state of the PR, apply the requested changes, and push the fix.
             Ensure all existing tests continue to pass after the change.
+
+      - name: Commit and push Codex fix
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Codex completed without repository changes."
+          else
+            git commit -m "fix: apply requested Codex changes"
+            git push
+          fi
 
   # ── AI Final Review ────────────────────────────────────────────────────────
   ai-final-review:
@@ -181,12 +203,13 @@ jobs:
             });
 
       - name: Invoke Technical Validator for final sanity check
-        uses: peter-evans/create-or-update-comment@v4
+        uses: ./.github/actions/run-codex
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number || github.event.issue.number }}
-          body: |
-            @copilot You are acting as the **Egg Technical Validator** agent for the **Final Pre-Merge Review**.
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          role: egg-techinical-validator
+          skills: architecture code-review security testing
+          prompt: |
+            You are acting as the **Egg Technical Validator** agent for the **Final Pre-Merge Review**.
 
             All final CI gates have passed ✅. Perform a last sanity check before merging:
 
@@ -261,8 +284,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
