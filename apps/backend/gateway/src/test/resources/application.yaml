@@ -1,0 +1,15 @@
+# Test configuration - overrides main application.yaml for integration tests
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Use a local JWK URI for tests - lazy loaded, no network call at startup
+          jwk-set-uri: http://localhost:9999/not-used-at-startup
+
+# Disable security for integration test context load
+gateway:
+  security:
+    enabled: false
+  rate-limit:
+    enabled: false
