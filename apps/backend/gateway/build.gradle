@@ -31,6 +31,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
     implementation "io.opentelemetry:opentelemetry-exporter-otlp:1.64.0"
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
+	implementation 'net.logstash.logback:logstash-logback-encoder:8.1'
+	implementation 'com.google.protobuf:protobuf-java-util:4.33.4'
 	implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
 	implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
 	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
@@ -42,6 +48,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-webflux-test'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.testcontainers:testcontainers-grafana'
 	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -55,6 +62,24 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+sourceSets {
+	perf {
+		java.srcDir 'src/perf/java'
+	}
+}
+
+tasks.register('performanceTest', JavaExec) {
+	group = 'verification'
+	description = 'Runs the Java gateway baseline, peak, stress, spike, or soak performance profile.'
+	classpath = sourceSets.perf.runtimeClasspath
+	mainClass = 'com.nest.egg.gateway.perf.GatewayPerformanceTest'
+	args providers.gradleProperty('profile').getOrElse('baseline')
+	environment 'BASE_URL', System.getenv('BASE_URL') ?: 'http://localhost:1080'
+	if (System.getenv('TOKEN')) {
+		environment 'TOKEN', System.getenv('TOKEN')
+	}
 }
 
 allprojects {

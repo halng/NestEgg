@@ -1,0 +1,25 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            user-service:
+              - uri: ${USER_SERVICE_URL:http://localhost:8083}
+            order-service:
+              - uri: ${ORDER_SERVICE_URL:http://localhost:8084}
+
+gateway:
+  security:
+    enabled: ${GATEWAY_SECURITY_ENABLED:false}
+    issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/nestegg}
+
+management:
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
