@@ -1,0 +1,22 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            user-service:
+              - uri: ${USER_SERVICE_URL}
+            order-service:
+              - uri: ${ORDER_SERVICE_URL}
+
+gateway:
+  security:
+    enabled: true
+
+management:
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:0.25}

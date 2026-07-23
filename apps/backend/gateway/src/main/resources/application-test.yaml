@@ -1,0 +1,30 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            user-service:
+              - uri: ${USER_SERVICE_URL:http://localhost:18083}
+            order-service:
+              - uri: ${ORDER_SERVICE_URL:http://localhost:18084}
+
+gateway:
+  rate-limit:
+    enabled: false
+  security:
+    enabled: false
+    issuer-uri: http://localhost:18082/realms/nestegg-test
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: http://localhost:14318/v1/traces
