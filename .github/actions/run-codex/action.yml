@@ -1,0 +1,80 @@
+name: Run NestEgg Codex agent
+description: Install Codex CLI and run it with a repository role and selected skills.
+
+inputs:
+  role:
+    description: Role document name in agents/, without the .md extension.
+    required: true
+  skills:
+    description: Space-separated skill document names in skills/, without .md extensions.
+    required: false
+    default: ""
+  prompt:
+    description: Task-specific instructions for Codex.
+    required: true
+  openai-api-key:
+    description: OpenAI API key used by Codex CLI.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Codex CLI using npm
+      shell: bash
+      run: npm install -g @openai/codex
+
+    - name: Load role and skills and run Codex
+      shell: bash
+      env:
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        CODEX_ROLE: ${{ inputs.role }}
+        CODEX_SKILLS: ${{ inputs.skills }}
+        CODEX_TASK: ${{ inputs.prompt }}
+      run: |
+        set -euo pipefail
+
+        if [[ ! "$CODEX_ROLE" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+          echo "::error::Invalid Codex role name: $CODEX_ROLE"
+          exit 1
+        fi
+
+        role_file="agents/${CODEX_ROLE}.md"
+        if [[ ! -f "$role_file" ]]; then
+          echo "::error::Codex role not found: $role_file"
+          exit 1
+        fi
+
+        context_file="$(mktemp)"
+        trap 'rm -f "$context_file"' EXIT
+        {
+          echo "# NestEgg Codex agent context"
+          echo
+          echo "Follow the repository role below as the primary operating instructions."
+          echo "Read repository files before changing them and obey every applicable AGENTS.md."
+          echo
+          echo "## Role: ${CODEX_ROLE}"
+          cat "$role_file"
+
+          for skill in $CODEX_SKILLS; do
+            if [[ ! "$skill" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "::error::Invalid Codex skill name: $skill" >&2
+              exit 1
+            fi
+            skill_file="skills/${skill}.md"
+            if [[ ! -f "$skill_file" ]]; then
+              echo "::error::Codex skill not found: $skill_file" >&2
+              exit 1
+            fi
+            echo
+            echo "## Skill: ${skill}"
+            cat "$skill_file"
+          done
+
+          echo
+          echo "## Task"
+          printf '%s\n' "$CODEX_TASK"
+          echo
+          echo "Work autonomously in the checked-out repository. Make requested file changes, run relevant checks, and do not merely describe what should be done. Do not commit or push; the workflow owns Git operations."
+        } > "$context_file"
+
+        codex exec --full-auto - < "$context_file"
