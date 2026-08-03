@@ -68,6 +68,7 @@ jobs:
       - name: Publish specification pull request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_TITLE: ${{ github.event.issue.title }}
         run: |
           set -euo pipefail
           branch="codex/spec-${{ github.event.issue.number }}"
@@ -78,7 +79,7 @@ jobs:
           git commit -m "docs: add specification for issue #${{ github.event.issue.number }}"
           git push --set-upstream origin "$branch"
           gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" \
-            --title "Spec: ${{ github.event.issue.title }}" \
+            --title "Spec: $PR_TITLE" \
             --body "Closes #${{ github.event.issue.number }}"
 
   validate-spec:

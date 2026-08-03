@@ -33,6 +33,11 @@ runs:
       run: |
         set -euo pipefail
 
+        if [[ ! "$CODEX_ROLE" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+          echo "::error::Invalid Codex role name: $CODEX_ROLE"
+          exit 1
+        fi
+
         role_file="agents/${CODEX_ROLE}.md"
         if [[ ! -f "$role_file" ]]; then
           echo "::error::Codex role not found: $role_file"
@@ -51,6 +56,10 @@ runs:
           cat "$role_file"
 
           for skill in $CODEX_SKILLS; do
+            if [[ ! "$skill" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+              echo "::error::Invalid Codex skill name: $skill" >&2
+              exit 1
+            fi
             skill_file="skills/${skill}.md"
             if [[ ! -f "$skill_file" ]]; then
               echo "::error::Codex skill not found: $skill_file" >&2

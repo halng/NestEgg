@@ -181,9 +181,11 @@ jobs:
     outputs:
       gates-passed: ${{ steps.gate-result.outputs.passed }}
     steps:
-      - name: Checkout repository
+      - name: Checkout latest pull request branch
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
 
       - name: Set up JDK 21
@@ -268,8 +270,11 @@ jobs:
     needs: quality-gates
     if: needs.quality-gates.result == 'failure'
     steps:
-      - name: Checkout repository
+      - name: Checkout latest pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Failure Analyzer — Collect logs and identify root cause
         uses: ./.github/actions/run-codex
@@ -299,6 +304,16 @@ jobs:
             - Suggested root cause
             - Suggested fix for human review
 
+      - name: Commit and push self-correction
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git diff --cached --quiet && { echo "Codex produced no corrective changes"; exit 1; }
+          git commit -m "fix: apply Codex quality-gate correction"
+          git push
+
   # ── AI Pre-Human Review ────────────────────────────────────────────────────
   ai-review:
     name: AI Pre-Human Review
@@ -306,8 +321,11 @@ jobs:
     needs: quality-gates
     if: needs.quality-gates.result == 'success'
     steps:
-      - name: Checkout repository
+      - name: Checkout latest pull request branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Ensure ready-for-human-review label exists
         uses: actions/github-script@v7
